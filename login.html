@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Shakuntlam</title>
+  <style>
+    body {
+      display: flex; justify-content: center; align-items: center;
+      height: 100vh; margin: 0; font-family: Arial, sans-serif;
+      background: #f0f2f5;
+    }
+    .login-box {
+      background: #fff; padding: 30px; border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px;
+    }
+    .login-box h2 { margin-top: 0; text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+    .form-group input {
+      width: 100%; padding: 10px; border: 1px solid #ccc;
+      border-radius: 5px; font-size: 1rem;
+    }
+    .btn-login {
+      width: 100%; padding: 12px; border: none;
+      border-radius: 5px; background: #007bff;
+      color: white; font-size: 1rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-login:hover { background: #0056b3; }
+    .error { color: red; font-size: 0.9rem; margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <h2>Login</h2>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required>
+      </div>
+      <button type="submit" class="btn-login">Login</button>
+      <div class="error" id="error-message"></div>
+    </form>
+  </div>
+
+<script type="module">
+  // Import Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // 🔹 Your Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyA0fmYGnjo84ZA9ld2HG5fcodySXbykBPw",
+    authDomain: "rewards-97547.firebaseapp.com",
+    projectId: "rewards-97547",
+    storageBucket: "rewards-97547.appspot.com",
+    messagingSenderId: "386741383248",
+    appId: "1:386741383248:web:9be63e316c8c791823a155",
+    measurementId: "G-79D3270T1P"
+  };
+
+  // Init
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // 🔹 Handle login
+  document.getElementById("login-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const errorBox = document.getElementById("error-message");
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 🔹 Look up role in Firestore
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        if (data.role === "admin") {
+          window.location.href = "admin.html";
+        } else {
+          window.location.href = "user.html"; // your user dashboard page
+        }
+      } else {
+        errorBox.textContent = "No role assigned. Contact support.";
+      }
+    } catch (error) {
+      errorBox.textContent = error.message;
+    }
+  });
+</script>
+</body>
+</html>
