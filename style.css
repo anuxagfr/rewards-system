@@ -1,0 +1,5 @@
+notifications/{autoId} {
+  title: "Points adjusted",
+  message: "Your bill INV-1002 was verified. Points updated.",
+  createdAt: serverTimestamp()
+}
