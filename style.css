@@ -1,6 +1,33 @@
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f9f9f9; color: #333; }
+    header { background: #4a148c; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 1.5rem; }
+    nav a { color: #fff; margin-left: 1.2rem; text-decoration: none; font-weight: 500; cursor: pointer; }
+    nav a:hover { text-decoration: underline; }
 
-    body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
-    header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .hero { background: linear-gradient(rgba(74,20,140,0.7), rgba(74,20,140,0.7)), url('https://picsum.photos/1600/800?blur=2') no-repeat center/cover; color: #fff; text-align: center; padding: 5rem 2rem; }
+    .hero h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; margin-bottom: 2rem; }
+    .hero button { background: #ffca28; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; }
+    .hero button:hover { background: #ffc107; }
+
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; padding: 3rem 2rem; max-width: 1200px; margin: auto; }
+    .card { background: #fff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; }
+    .card h3 { margin-top: 0; color: #4a148c; }
+
+    footer { background: #4a148c; color: #fff; text-align: center; padding: 1rem; margin-top: 2rem; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+    .modal-content { background: #fff; margin: 5% auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 400px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .modal-content h2 { text-align: center; color: #4a148c; }
+    .modal-content input { width:90%; padding: 0.8rem; margin: 0.5rem 0; border: 1px solid #ccc; border-radius: 8px; }
+    .modal-content button { width: 100%; background: #4a148c; color: #fff; border: none; padding: 0.8rem; border-radius: 8px; font-size: 1rem; cursor: pointer; margin-top: 1rem; }
+    .modal-content button:hover { background: #6a1b9a; }
+    .close { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; }
+    .toggle-link { display: block; text-align: center; margin-top: 1rem; color: #4a148c; cursor: pointer; font-size: 0.9rem; }
+    .error { color: red; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; }
+    .success { color: green; font-size: 0.85rem; margin-top: 0.5rem; text-align: center; }
+
     .logo{height:36px}
     .container{max-width:1300px;margin:28px auto;padding:0 16px}
     .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:20px;margin-bottom:20px}
