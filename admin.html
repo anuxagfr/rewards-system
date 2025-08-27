@@ -4,8 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard - Shakuntlam</title>
-   <link rel="stylesheet" href="style.css">
-   
   <style>
     body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
     header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
@@ -28,16 +26,24 @@
     .stat-num{font-size:1.8rem;font-weight:700;color:#007bff}
     input[type="number"],input[type="text"],input[type="email"],input[type="password"]{padding:6px;border:1px solid #ccc;border-radius:4px}
     .msg{margin-top:6px;font-weight:600}
+    .small{font-size:0.9rem;color:#666}
+    .flex{display:flex;gap:8px;align-items:center}
+    .right{margin-left:auto}
+    .section-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    label{font-weight:600}
+    .hidden{display:none}
   </style>
 </head>
 <body>
   <header>
-    <div> <strong>Admin Dashboard</strong></div>
-    <button class="btn btn-logout" id="logoutBtn">Logout</button>
+    <div><img src="logo.png" class="logo" alt="logo" style="height:28px;vertical-align:middle"/> <strong>Admin Dashboard</strong></div>
+    <div class="flex">
+      <div id="roleBadge" class="small"></div>
+      <button class="btn btn-logout" id="logoutBtn">Logout</button>
+    </div>
   </header>
 
   <div class="container">
-
     <!-- Stats -->
     <div class="stats">
       <div class="stat-box">
@@ -57,23 +63,40 @@
     <!-- Admin Profile -->
     <div class="card">
       <h2>👤 My Profile</h2>
-      <label>Name</label><br>
-      <input type="text" id="adminName"><br>
-      <label>Email</label><br>
-      <input type="email" id="adminEmail" disabled><br>
-      <label>Change Password</label><br>
-      <input type="password" id="adminPwd" placeholder="New password"><br>
-      <button class="btn btn-edit" id="saveProfileBtn">Save Profile</button>
-      <div class="msg" id="profileMsg"></div>
+      <div class="section-row">
+        <div style="flex:1">
+          <label>Name</label><br>
+          <input type="text" id="adminName" placeholder="Your name"><br>
+        </div>
+        <div style="width:300px">
+          <label>Email</label><br>
+          <input type="email" id="adminEmail" disabled><br>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Change Password</label><br>
+        <input type="password" id="adminPwd" placeholder="New password (min 6 chars)">
+        <input type="password" id="reauthPwd" placeholder="Current password (required to change)" style="margin-left:8px">
+        <div class="small">To change password you must enter your current password for re-authentication.</div>
+      </div>
+
+      <div style="margin-top:10px">
+        <button class="btn btn-edit" id="saveProfileBtn">Save Profile</button>
+        <div id="profileMsg" class="msg"></div>
+      </div>
     </div>
 
-    <!-- Admin Management (only for superadmin) -->
-    <div class="card" id="adminManageCard" style="display:none">
+    <!-- Superadmin: Manage Admins -->
+    <div class="card hidden" id="adminManageCard">
       <h2>🛡️ Manage Admins (Super Admin Only)</h2>
-      <input type="email" id="newAdminEmail" placeholder="Admin email">
-      <input type="password" id="newAdminPwd" placeholder="Temp password">
-      <button class="btn btn-add" id="addAdminBtn">Add Admin</button>
-      <div class="msg" id="adminMsg"></div>
+      <div class="section-row">
+        <input type="email" id="newAdminEmail" placeholder="Admin email">
+        <input type="password" id="newAdminPwd" placeholder="Temp password">
+        <button class="btn btn-add" id="addAdminBtn">Add Admin (request)</button>
+      </div>
+      <div id="adminMsg" class="msg"></div>
+
       <table>
         <thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead>
         <tbody id="adminsTable"></tbody>
@@ -82,28 +105,21 @@
 
     <!-- Notifications -->
     <div class="card">
-      <h2>🔔 Send Notification to Users</h2>
-      <input type="text" id="notifTitle" placeholder="Title"><br>
-      <input type="text" id="notifMsg" placeholder="Message"><br>
-      <button class="btn btn-add" id="sendNotifBtn">Send Notification</button>
-      <div class="msg" id="notifMsgBox"></div>
-    </div>
+      <h2>🔔 Notifications</h2>
 
-    <!-- Existing sections here (Inbox, Bills, Users) ... -->
-  
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-box">
-        <div>Total Users</div>
-        <div id="statUsers" class="stat-num">0</div>
+      <div class="section-row">
+        <input type="text" id="notifTitle" placeholder="Title" style="flex:1">
+        <input type="text" id="notifMsgInput" placeholder="Message" style="flex:2">
+        <button class="btn btn-add" id="sendNotifBtn">Send Notification</button>
       </div>
-      <div class="stat-box">
-        <div>Total Bill Amount</div>
-        <div id="statAmount" class="stat-num">₹0</div>
-      </div>
-      <div class="stat-box">
-        <div>Total Points Awarded</div>
-        <div id="statPoints" class="stat-num">0</div>
+      <div id="notifMsgBox" class="msg"></div>
+
+      <div style="margin-top:14px">
+        <label>Recent Notifications</label>
+        <table>
+          <thead><tr><th>Title</th><th>Message</th><th>Date</th></tr></thead>
+          <tbody id="notifsTable"></tbody>
+        </table>
       </div>
     </div>
 
@@ -121,11 +137,11 @@
       <h2>🧾 Bills Database</h2>
 
       <!-- Add new bill -->
-      <div>
+      <div class="section-row">
         <input type="text" id="newBillNo" placeholder="Bill No"/>
         <input type="number" id="newBillAmt" placeholder="Amount"/>
         <button class="btn btn-add" id="addBillBtn">Add Bill</button>
-        <div id="addBillMsg"></div>
+        <div id="addBillMsg" class="msg"></div>
       </div>
 
       <table>
@@ -144,21 +160,21 @@
     </div>
   </div>
 
-
-
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
+    // ================= Initialize Firebase =================
     const firebaseConfig = {
       apiKey: "AIzaSyA0fmYGnjo84ZA9ld2HG5fcodySXbykBPw",
       authDomain: "rewards-97547.firebaseapp.com",
       projectId: "rewards-97547",
       storageBucket: "rewards-97547.appspot.com",
       messagingSenderId: "386741383248",
-      appId: "1:386741383248:web:9be63e316c8c791823a155"
+      appId: "1:386741383248:web:9be63e316c8c791823a155",
+      measurementId: "G-79D3270T1P"
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
@@ -166,48 +182,65 @@
 
     let currentAdmin = null;
 
-    // Auth Guard
-    auth.onAuthStateChanged(async (user)=>{
-      if (!user) { location.href="index.html"; return; }
-      const snap = await db.collection("users").doc(user.uid).get();
-      if (!snap.exists || (snap.data().role!=="admin" && snap.data().role!=="superadmin")){
-        alert("Access denied!");
+    // ================= Auth Guard & Role Setup =================
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) { location.href = 'index.html'; return; }
+      const snap = await db.collection('users').doc(user.uid).get();
+      if (!snap.exists || (snap.data().role !== 'admin' && snap.data().role !== 'superadmin')) {
+        alert("Access denied. Admins only.");
         auth.signOut();
-      } else {
-        currentAdmin = { uid:user.uid, email:user.email, role:snap.data().role };
-        document.getElementById("adminName").value = snap.data().name || "";
-        document.getElementById("adminEmail").value = user.email;
-        if(snap.data().role==="superadmin") {
-          document.getElementById("adminManageCard").style.display="block";
-          loadAdmins();
-        }
+        return;
       }
+      // set currentAdmin
+      currentAdmin = { uid: user.uid, email: user.email, role: snap.data().role };
+      document.getElementById('adminName').value = snap.data().name || "";
+      document.getElementById('adminEmail').value = user.email;
+      document.getElementById('roleBadge').textContent = snap.data().role.toUpperCase();
+
+      // if superadmin, show admin management
+      if (snap.data().role === 'superadmin') {
+        document.getElementById('adminManageCard').classList.remove('hidden');
+        loadAdmins();
+      } else {
+        document.getElementById('adminManageCard').classList.add('hidden');
+      }
+
+      // subscribe to data
+      subscribeInbox();
+      subscribeBills();
+      subscribeUsers();
+      subscribeNotifications();
     });
 
-    // ===== Inbox
+    // Logout with redirect
+    document.getElementById('logoutBtn').onclick = () => {
+      auth.signOut().then(()=> location.href='index.html');
+    };
+
+    // ================= Inbox =================
     function subscribeInbox(){
       db.collection('admin_inbox').orderBy('createdAt','desc')
-        .onSnapshot(snap=>{
+        .onSnapshot(snap => {
           const tbody = document.getElementById('inboxTable');
           tbody.innerHTML = '';
-          snap.forEach(doc=>{
+          snap.forEach(doc => {
             const d = doc.data();
             const tr = document.createElement('tr');
             const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
             tr.innerHTML = `
               <td>${d.billNo}</td>
               <td>₹${d.amount}</td>
-              <td>${d.userEmail}</td>
+              <td>${d.userEmail || '-'}</td>
               <td>${date}</td>
               <td>
                 <button class="btn btn-approve">Approve</button>
                 <button class="btn btn-reject">Reject</button>
               </td>`;
-            tr.querySelector('.btn-approve').onclick = async ()=>{
-              await addBillAndMaybeCredit(d.billNo, d.amount, d.userId, d.userEmail);
+            tr.querySelector('.btn-approve').onclick = async () => {
+              await addBillAndMaybeCredit(d.billNo, d.amount, d.userId || null, d.userEmail || null);
               await db.collection('admin_inbox').doc(doc.id).delete();
             };
-            tr.querySelector('.btn-reject').onclick = async ()=>{
+            tr.querySelector('.btn-reject').onclick = async () => {
               await db.collection('admin_inbox').doc(doc.id).delete();
             };
             tbody.appendChild(tr);
@@ -215,11 +248,14 @@
         });
     }
 
-    // ===== Helper: Add Bill (with optional auto-credit)
+    // ================= Helper: Add Bill (with optional auto-credit) =================
     async function addBillAndMaybeCredit(billNo, amount, userId=null, userEmail=null){
       const billRef = db.collection('bills').doc(billNo);
       const billSnap = await billRef.get();
-      if (billSnap.exists) return; // already exists
+      if (billSnap.exists) {
+        // already exists - skip
+        return;
+      }
 
       await billRef.set({
         billNo, amount,
@@ -243,29 +279,32 @@
       }
     }
 
-    // ===== Bills DB
+    // ================= Bills DB =================
     function subscribeBills(){
       db.collection('bills').orderBy('createdAt','desc')
-        .onSnapshot(snap=>{
+        .onSnapshot(snap => {
           const tbody = document.getElementById('billsTable');
           tbody.innerHTML = '';
           let totalAmt = 0;
-          snap.forEach(doc=>{
+          snap.forEach(doc => {
             const d = doc.data();
             totalAmt += d.amount || 0;
-            const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
+            const date = d.createdAt ? d.createdAt.toLocaleString() : '-';
             const status = d.claimedBy ? "✅ Claimed" : "⏳ Available";
             const tr = document.createElement('tr');
             tr.innerHTML = `
               <td>${d.billNo}</td>
-              <td>₹<input type="number" value="${d.amount}" style="width:80px" id="amt-${doc.id}"/></td>
+              <td>₹<input type="number" value="${d.amount}" style="width:100px" id="amt-${doc.id}"/></td>
               <td>${status}</td>
               <td>${d.claimedBy || '-'}</td>
               <td>${date}</td>
               <td><button class="btn btn-edit">Update</button></td>`;
-            tr.querySelector('.btn-edit').onclick = async ()=>{
+            tr.querySelector('.btn-edit').onclick = async () => {
               const newAmt = parseFloat(document.getElementById('amt-'+doc.id).value);
-              if (isNaN(newAmt) || newAmt<=0) return;
+              if (isNaN(newAmt) || newAmt <= 0) {
+                alert('Enter a valid amount');
+                return;
+              }
               const billRef = db.collection('bills').doc(doc.id);
               const billSnap = await billRef.get();
               if (!billSnap.exists) return;
@@ -273,29 +312,30 @@
 
               if (!bill.claimedBy) {
                 await billRef.update({ amount: newAmt });
+                alert('Bill amount updated.');
               } else {
                 const userId = bill.claimedBy;
                 const uRef = db.collection('users').doc(userId);
-                const oldPoints = Math.floor((bill.amount||0)*0.01);
-                const newPoints = Math.floor(newAmt*0.01);
+                const oldPoints = Math.floor((bill.amount||0) * 0.01);
+                const newPoints = Math.floor(newAmt * 0.01);
                 const diff = newPoints - oldPoints;
 
-                await db.runTransaction(async (tx)=>{
+                await db.runTransaction(async (tx) => {
                   const uSnap = await tx.get(uRef);
                   const curPts = (uSnap.exists && uSnap.data().points) ? uSnap.data().points : 0;
                   tx.update(uRef, { points: curPts + diff });
-                  tx.update(billRef, { amount:newAmt });
+                  tx.update(billRef, { amount: newAmt });
                   const claimsRef = uRef.collection("claims");
-                  const claimSnap = await claimsRef.where("billNo","==",bill.billNo).limit(1).get();
-                  if (!claimSnap.empty){
+                  const claimSnap = await claimsRef.where("billNo","==", bill.billNo).limit(1).get();
+                  if (!claimSnap.empty) {
                     const claimDoc = claimSnap.docs[0];
                     tx.update(claimsRef.doc(claimDoc.id), {
-                      amount:newAmt, points:newPoints,
+                      amount: newAmt, points: newPoints,
                       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                   }
                 });
-                alert(`Bill updated. User’s points adjusted to ${newPoints}.`);
+                alert(`Bill updated. User's points adjusted to ${newPoints} (diff ${diff}).`);
               }
             };
             tbody.appendChild(tr);
@@ -304,18 +344,18 @@
         });
     }
 
-    // ===== Users DB
+    // ================= Users DB =================
     function subscribeUsers(){
-      db.collection('users').onSnapshot(snap=>{
+      db.collection('users').onSnapshot(snap => {
         const tbody = document.getElementById('usersTable');
         tbody.innerHTML = '';
         let totalPts = 0, totalUsers = 0;
-        snap.forEach(doc=>{
+        snap.forEach(doc => {
           const d = doc.data();
           totalPts += d.points || 0;
           totalUsers++;
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${d.name||'-'}</td><td>${d.email}</td><td>${d.phone||'-'}</td><td>${d.points||0}</td>`;
+          tr.innerHTML = `<td>${d.name || '-'}</td><td>${d.email}</td><td>${d.phone || '-'}</td><td>${d.points || 0}</td>`;
           tbody.appendChild(tr);
         });
         document.getElementById('statUsers').textContent = totalUsers;
@@ -323,57 +363,73 @@
       });
     }
 
-    // ===== Add Bill manually
-    document.getElementById('addBillBtn').onclick = async ()=>{
+    // ================= Add Bill manually =================
+    document.getElementById('addBillBtn').onclick = async () => {
       const billNo = document.getElementById('newBillNo').value.trim();
       const amount = parseFloat(document.getElementById('newBillAmt').value);
       const msg = document.getElementById('addBillMsg');
-      msg.textContent="";
-      if(!billNo || isNaN(amount) || amount<=0){
-        msg.style.color="#dc3545"; msg.textContent="Enter valid bill details."; return;
+      msg.textContent = "";
+      if (!billNo || isNaN(amount) || amount <= 0) {
+        msg.style.color = "#dc3545"; msg.textContent = "Enter valid bill details."; return;
       }
-      try{
+      try {
         await addBillAndMaybeCredit(billNo, amount);
         // clean from inbox if exists
         const inboxSnap = await db.collection('admin_inbox').where("billNo","==",billNo).get();
-        inboxSnap.forEach(async (doc)=> await db.collection('admin_inbox').doc(doc.id).delete());
-        msg.style.color="#28a745"; msg.textContent="Bill added successfully!";
-        document.getElementById('newBillNo').value="";
-        document.getElementById('newBillAmt').value="";
-      }catch(e){
-        msg.style.color="#dc3545"; msg.textContent=e.message;
+        inboxSnap.forEach(async (d) => await db.collection('admin_inbox').doc(d.id).delete());
+        msg.style.color = "#28a745"; msg.textContent = "Bill added successfully!";
+        document.getElementById('newBillNo').value = "";
+        document.getElementById('newBillAmt').value = "";
+      } catch (e) {
+        msg.style.color = "#dc3545"; msg.textContent = e.message;
       }
     };
 
+    // ================= Profile Save (with reauth for password) =================
+    document.getElementById('saveProfileBtn').onclick = async () => {
+      const msg = document.getElementById('profileMsg'); msg.textContent = "";
+      try {
+        const newName = document.getElementById('adminName').value.trim();
+        const newPwd = document.getElementById('adminPwd').value.trim();
+        const currentPwd = document.getElementById('reauthPwd').value.trim();
 
-    // Logout
-    document.getElementById("logoutBtn").onclick=()=>auth.signOut();
+        if (newName) {
+          await db.collection('users').doc(currentAdmin.uid).set({ name: newName }, { merge: true });
+        }
 
-    // Save profile
-    document.getElementById("saveProfileBtn").onclick=async()=>{
-      const msg=document.getElementById("profileMsg"); msg.textContent="";
-      try{
-        const newName=document.getElementById("adminName").value.trim();
-        const newPwd=document.getElementById("adminPwd").value.trim();
-        if(newName) await db.collection("users").doc(currentAdmin.uid).set({ name:newName },{merge:true});
-        if(newPwd) await auth.currentUser.updatePassword(newPwd);
-        msg.style.color="#28a745"; msg.textContent="Profile updated!";
-      }catch(e){ msg.style.color="#dc3545"; msg.textContent=e.message; }
+        if (newPwd) {
+          if (newPwd.length < 6) throw new Error('Password should be at least 6 characters.');
+          // Need re-authenticate
+          if (!currentPwd) throw new Error('Enter current password for re-authentication to change password.');
+          const user = auth.currentUser;
+          const cred = firebase.auth.EmailAuthProvider.credential(user.email, currentPwd);
+          await user.reauthenticateWithCredential(cred);
+          await user.updatePassword(newPwd);
+        }
+
+        msg.style.color = "#28a745"; msg.textContent = "Profile updated!";
+        // Clear password inputs
+        document.getElementById('adminPwd').value = "";
+        document.getElementById('reauthPwd').value = "";
+      } catch (e) {
+        msg.style.color = "#dc3545"; msg.textContent = e.message;
+      }
     };
 
-    // Superadmin: Load admins
+    // ================= Superadmin: Load Admins =================
     async function loadAdmins(){
-      db.collection("users").where("role","in",["admin","superadmin"]).onSnapshot(snap=>{
-        const tbody=document.getElementById("adminsTable");
-        tbody.innerHTML="";
-        snap.forEach(doc=>{
-          const d=doc.data();
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>${d.email}</td><td>${d.role}</td>
-            <td>${d.role==="superadmin"?"-":'<button class="btn btn-danger">Remove</button>'}</td>`;
-          if(d.role!=="superadmin"){
-            tr.querySelector(".btn-danger").onclick=async()=>{
-              await db.collection("users").doc(doc.id).update({ role:"user" });
+      db.collection("users").where("role", "in", ["admin", "superadmin"]).onSnapshot(snap => {
+        const tbody = document.getElementById("adminsTable");
+        tbody.innerHTML = "";
+        snap.forEach(doc => {
+          const d = doc.data();
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${d.email}</td><td>${d.role}</td>
+            <td>${d.role === "superadmin" ? "-" : '<button class="btn btn-danger">Remove</button>'}</td>`;
+          if (d.role !== "superadmin") {
+            tr.querySelector(".btn-danger").onclick = async () => {
+              // demote to user
+              await db.collection("users").doc(doc.id).update({ role: "user" });
               alert("Admin removed");
             };
           }
@@ -382,34 +438,58 @@
       });
     }
 
-    // Add Admin
-    document.getElementById("addAdminBtn").onclick=async()=>{
-      const email=document.getElementById("newAdminEmail").value.trim();
-      const pwd=document.getElementById("newAdminPwd").value.trim();
-      const msg=document.getElementById("adminMsg"); msg.textContent="";
-      try{
-        // Note: Normally you'd create user via Firebase Admin SDK (server side)
-        // Here we just record it manually
-        await db.collection("pending_admins").add({ email, pwd, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-        msg.style.color="#28a745"; msg.textContent="Admin request saved. Create via Firebase Console/Auth.";
-      }catch(e){ msg.style.color="#dc3545"; msg.textContent=e.message; }
+    // ================= Add Admin (save request) =================
+    document.getElementById('addAdminBtn').onclick = async () => {
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const pwd = document.getElementById('newAdminPwd').value.trim();
+      const msg = document.getElementById('adminMsg'); msg.textContent = "";
+      if (!email || !pwd) { msg.style.color="#dc3545"; msg.textContent = "Enter email and temp password."; return; }
+      try {
+        // Save request - actual user creation should be done via server/Admin SDK or console
+        await db.collection('pending_admins').add({
+          email, pwd, createdAt: firebase.firestore.FieldValue.serverTimestamp(), requestedBy: currentAdmin.email
+        });
+        msg.style.color="#28a745"; msg.textContent = "Admin request saved. Create via Firebase Console/Auth.";
+        document.getElementById('newAdminEmail').value = "";
+        document.getElementById('newAdminPwd').value = "";
+      } catch (e) {
+        msg.style.color="#dc3545"; msg.textContent = e.message;
+      }
     };
 
-    // Send Notification
-    document.getElementById("sendNotifBtn").onclick=async()=>{
-      const title=document.getElementById("notifTitle").value.trim();
-      const message=document.getElementById("notifMsg").value.trim();
-      const box=document.getElementById("notifMsgBox"); box.textContent="";
-      if(!title||!message){ box.style.color="#dc3545"; box.textContent="Fill title & message"; return; }
-      await db.collection("notifications").add({
-        title,message,createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-      box.style.color="#28a745"; box.textContent="Notification sent!";
-      document.getElementById("notifTitle").value="";
-      document.getElementById("notifMsg").value="";
+    // ================= Notifications =================
+    document.getElementById('sendNotifBtn').onclick = async () => {
+      const title = document.getElementById('notifTitle').value.trim();
+      const message = document.getElementById('notifMsgInput').value.trim();
+      const box = document.getElementById('notifMsgBox'); box.textContent = "";
+      if (!title || !message) { box.style.color="#dc3545"; box.textContent="Fill title & message"; return; }
+      try {
+        await db.collection('notifications').add({
+          title, message, createdAt: firebase.firestore.FieldValue.serverTimestamp(), createdBy: currentAdmin.email
+        });
+        box.style.color="#28a745"; box.textContent="Notification saved!";
+        document.getElementById('notifTitle').value = "";
+        document.getElementById('notifMsgInput').value = "";
+      } catch (e) {
+        box.style.color="#dc3545"; box.textContent=e.message;
+      }
     };
+
+    function subscribeNotifications(){
+      db.collection('notifications').orderBy('createdAt','desc').limit(50).onSnapshot(snap => {
+        const tbody = document.getElementById('notifsTable');
+        tbody.innerHTML = '';
+        snap.forEach(doc => {
+          const d = doc.data();
+          const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${d.title}</td><td>${d.message}</td><td>${date}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    // ================= End of script =================
   </script>
 </body>
 </html>
-
-
