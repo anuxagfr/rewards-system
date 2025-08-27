@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>User Dashboard</title>
+  <title>User Dashboard - Shakuntlam</title>
   <style>
     body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
     header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
@@ -35,6 +35,7 @@
 <body>
   <header>
     <div class="topbar">
+      <img src="logo.png" class="logo" alt="Shakuntlam"/>
       <strong>User Dashboard</strong>
     </div>
     <div class="topbar">
@@ -107,23 +108,21 @@
 
   <script>
     // ===== Init Firebase
-      const firebaseConfig = {
-    apiKey: "AIzaSyA0fmYGnjo84ZA9ld2HG5fcodySXbykBPw",
-    authDomain: "rewards-97547.firebaseapp.com",
-    projectId: "rewards-97547",
-    storageBucket: "rewards-97547.appspot.com",
-    messagingSenderId: "386741383248",
-    appId: "1:386741383248:web:9be63e316c8c791823a155",
-    measurementId: "G-79D3270T1P"
-  };
-
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
     // ===== Auth Guard
     auth.onAuthStateChanged(async (user) => {
-      if (!user) { location.href = 'index.html'; return; }
+      if (!user) { location.href = 'user-login.html'; return; }
       window.currentUser = user;
       document.getElementById('helloName').textContent = 'Hi, ' + (user.displayName || 'User');
       subscribeUser(user.uid);
