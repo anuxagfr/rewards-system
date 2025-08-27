@@ -32,7 +32,7 @@
 </head>
 <body>
   <header>
-    <div><img src="logo.png" class="logo"/> <strong>Admin Dashboard</strong></div>
+    <div> <strong>Admin Dashboard</strong></div>
     <button class="btn btn-logout" id="logoutBtn">Logout</button>
   </header>
 
@@ -90,7 +90,61 @@
     </div>
 
     <!-- Existing sections here (Inbox, Bills, Users) ... -->
+  
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-box">
+        <div>Total Users</div>
+        <div id="statUsers" class="stat-num">0</div>
+      </div>
+      <div class="stat-box">
+        <div>Total Bill Amount</div>
+        <div id="statAmount" class="stat-num">₹0</div>
+      </div>
+      <div class="stat-box">
+        <div>Total Points Awarded</div>
+        <div id="statPoints" class="stat-num">0</div>
+      </div>
+    </div>
+
+    <!-- Pending Inbox -->
+    <div class="card">
+      <h2>📩 Pending Requests (Bill Not Found)</h2>
+      <table>
+        <thead><tr><th>Bill #</th><th>Amount</th><th>User</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody id="inboxTable"></tbody>
+      </table>
+    </div>
+
+    <!-- All Bills -->
+    <div class="card">
+      <h2>🧾 Bills Database</h2>
+
+      <!-- Add new bill -->
+      <div>
+        <input type="text" id="newBillNo" placeholder="Bill No"/>
+        <input type="number" id="newBillAmt" placeholder="Amount"/>
+        <button class="btn btn-add" id="addBillBtn">Add Bill</button>
+        <div id="addBillMsg"></div>
+      </div>
+
+      <table>
+        <thead><tr><th>Bill #</th><th>Amount</th><th>Status</th><th>Claimed By</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody id="billsTable"></tbody>
+      </table>
+    </div>
+
+    <!-- Users -->
+    <div class="card">
+      <h2>👥 Users</h2>
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Points</th></tr></thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+    </div>
   </div>
+
+
 
   <!-- Firebase v8 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -129,6 +183,168 @@
         }
       }
     });
+
+    // ===== Inbox
+    function subscribeInbox(){
+      db.collection('admin_inbox').orderBy('createdAt','desc')
+        .onSnapshot(snap=>{
+          const tbody = document.getElementById('inboxTable');
+          tbody.innerHTML = '';
+          snap.forEach(doc=>{
+            const d = doc.data();
+            const tr = document.createElement('tr');
+            const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
+            tr.innerHTML = `
+              <td>${d.billNo}</td>
+              <td>₹${d.amount}</td>
+              <td>${d.userEmail}</td>
+              <td>${date}</td>
+              <td>
+                <button class="btn btn-approve">Approve</button>
+                <button class="btn btn-reject">Reject</button>
+              </td>`;
+            tr.querySelector('.btn-approve').onclick = async ()=>{
+              await addBillAndMaybeCredit(d.billNo, d.amount, d.userId, d.userEmail);
+              await db.collection('admin_inbox').doc(doc.id).delete();
+            };
+            tr.querySelector('.btn-reject').onclick = async ()=>{
+              await db.collection('admin_inbox').doc(doc.id).delete();
+            };
+            tbody.appendChild(tr);
+          });
+        });
+    }
+
+    // ===== Helper: Add Bill (with optional auto-credit)
+    async function addBillAndMaybeCredit(billNo, amount, userId=null, userEmail=null){
+      const billRef = db.collection('bills').doc(billNo);
+      const billSnap = await billRef.get();
+      if (billSnap.exists) return; // already exists
+
+      await billRef.set({
+        billNo, amount,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        claimedBy: userId || null
+      });
+
+      // Auto-credit points if user is linked
+      if (userId) {
+        const points = Math.floor(amount * 0.01);
+        const uRef = db.collection('users').doc(userId);
+        await db.runTransaction(async (tx) => {
+          const uSnap = await tx.get(uRef);
+          const curPts = (uSnap.exists && uSnap.data().points) ? uSnap.data().points : 0;
+          tx.update(uRef, { points: curPts + points });
+          tx.set(uRef.collection("claims").doc(), {
+            billNo, amount, points,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+      }
+    }
+
+    // ===== Bills DB
+    function subscribeBills(){
+      db.collection('bills').orderBy('createdAt','desc')
+        .onSnapshot(snap=>{
+          const tbody = document.getElementById('billsTable');
+          tbody.innerHTML = '';
+          let totalAmt = 0;
+          snap.forEach(doc=>{
+            const d = doc.data();
+            totalAmt += d.amount || 0;
+            const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
+            const status = d.claimedBy ? "✅ Claimed" : "⏳ Available";
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${d.billNo}</td>
+              <td>₹<input type="number" value="${d.amount}" style="width:80px" id="amt-${doc.id}"/></td>
+              <td>${status}</td>
+              <td>${d.claimedBy || '-'}</td>
+              <td>${date}</td>
+              <td><button class="btn btn-edit">Update</button></td>`;
+            tr.querySelector('.btn-edit').onclick = async ()=>{
+              const newAmt = parseFloat(document.getElementById('amt-'+doc.id).value);
+              if (isNaN(newAmt) || newAmt<=0) return;
+              const billRef = db.collection('bills').doc(doc.id);
+              const billSnap = await billRef.get();
+              if (!billSnap.exists) return;
+              const bill = billSnap.data();
+
+              if (!bill.claimedBy) {
+                await billRef.update({ amount: newAmt });
+              } else {
+                const userId = bill.claimedBy;
+                const uRef = db.collection('users').doc(userId);
+                const oldPoints = Math.floor((bill.amount||0)*0.01);
+                const newPoints = Math.floor(newAmt*0.01);
+                const diff = newPoints - oldPoints;
+
+                await db.runTransaction(async (tx)=>{
+                  const uSnap = await tx.get(uRef);
+                  const curPts = (uSnap.exists && uSnap.data().points) ? uSnap.data().points : 0;
+                  tx.update(uRef, { points: curPts + diff });
+                  tx.update(billRef, { amount:newAmt });
+                  const claimsRef = uRef.collection("claims");
+                  const claimSnap = await claimsRef.where("billNo","==",bill.billNo).limit(1).get();
+                  if (!claimSnap.empty){
+                    const claimDoc = claimSnap.docs[0];
+                    tx.update(claimsRef.doc(claimDoc.id), {
+                      amount:newAmt, points:newPoints,
+                      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                  }
+                });
+                alert(`Bill updated. User’s points adjusted to ${newPoints}.`);
+              }
+            };
+            tbody.appendChild(tr);
+          });
+          document.getElementById('statAmount').textContent = "₹" + totalAmt;
+        });
+    }
+
+    // ===== Users DB
+    function subscribeUsers(){
+      db.collection('users').onSnapshot(snap=>{
+        const tbody = document.getElementById('usersTable');
+        tbody.innerHTML = '';
+        let totalPts = 0, totalUsers = 0;
+        snap.forEach(doc=>{
+          const d = doc.data();
+          totalPts += d.points || 0;
+          totalUsers++;
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${d.name||'-'}</td><td>${d.email}</td><td>${d.phone||'-'}</td><td>${d.points||0}</td>`;
+          tbody.appendChild(tr);
+        });
+        document.getElementById('statUsers').textContent = totalUsers;
+        document.getElementById('statPoints').textContent = totalPts;
+      });
+    }
+
+    // ===== Add Bill manually
+    document.getElementById('addBillBtn').onclick = async ()=>{
+      const billNo = document.getElementById('newBillNo').value.trim();
+      const amount = parseFloat(document.getElementById('newBillAmt').value);
+      const msg = document.getElementById('addBillMsg');
+      msg.textContent="";
+      if(!billNo || isNaN(amount) || amount<=0){
+        msg.style.color="#dc3545"; msg.textContent="Enter valid bill details."; return;
+      }
+      try{
+        await addBillAndMaybeCredit(billNo, amount);
+        // clean from inbox if exists
+        const inboxSnap = await db.collection('admin_inbox').where("billNo","==",billNo).get();
+        inboxSnap.forEach(async (doc)=> await db.collection('admin_inbox').doc(doc.id).delete());
+        msg.style.color="#28a745"; msg.textContent="Bill added successfully!";
+        document.getElementById('newBillNo').value="";
+        document.getElementById('newBillAmt').value="";
+      }catch(e){
+        msg.style.color="#dc3545"; msg.textContent=e.message;
+      }
+    };
+
 
     // Logout
     document.getElementById("logoutBtn").onclick=()=>auth.signOut();
@@ -195,4 +411,5 @@
   </script>
 </body>
 </html>
+
 
