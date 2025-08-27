@@ -3,91 +3,119 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard - Shakuntlam</title>
+  <title>User Dashboard - Shakuntlam</title>
   <style>
     body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
     header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
     .logo{height:36px}
-    .container{max-width:1300px;margin:28px auto;padding:0 16px}
-    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:20px;margin-bottom:20px}
+    .container{max-width:1100px;margin:28px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:20px}
     h2{margin:0 0 12px}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{border:1px solid #eee;padding:8px;text-align:left}
+    .balance{font-size:2.2rem;font-weight:800;color:#007bff}
+    .tabs{display:flex;gap:10px;margin-bottom:14px}
+    .tab{padding:8px 12px;border-radius:999px;background:#e9ecef;cursor:pointer;font-weight:600}
+    .tab.active{background:#007bff;color:#fff}
+    .hidden{display:none}
+    label{display:block;margin-top:12px;font-weight:600}
+    input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px}
+    .btn{margin-top:14px;padding:12px 16px;border:none;border-radius:8px;font-weight:700;color:#fff;cursor:pointer}
+    .btn-primary{background:#007bff}
+    .btn-green{background:#28a745}
+    .btn-gray{background:#6c757d}
+    .row{display:flex;gap:10px;align-items:center}
+    .msg{margin-top:8px;min-height:20px}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border:1px solid #eee;padding:10px;text-align:left}
     thead{background:#f8f9fa}
-    .btn{padding:6px 12px;border:none;border-radius:6px;font-weight:600;color:#fff;cursor:pointer}
-    .btn-approve{background:#28a745}
-    .btn-reject{background:#dc3545}
-    .btn-logout{background:#6c757d}
-    .btn-edit{background:#007bff}
-    .btn-add{background:#17a2b8;margin-top:10px}
-    .btn-danger{background:#dc3545}
-    .stats{display:flex;gap:20px;margin-bottom:20px}
-    .stat-box{flex:1;background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);text-align:center}
-    .stat-num{font-size:1.8rem;font-weight:700;color:#007bff}
-    input[type="number"],input[type="text"],input[type="email"],input[type="password"]{padding:6px;border:1px solid #ccc;border-radius:4px}
-    .msg{margin-top:6px;font-weight:600}
+    .topbar{display:flex;gap:12px;align-items:center}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:#e9f5ff;color:#0366d6;border-radius:999px;padding:6px 10px;font-weight:700}
+    .dot{width:8px;height:8px;border-radius:50%;background:#dc3545}
+    .notif-item{border:1px solid #eee;border-radius:10px;padding:12px;margin-bottom:10px}
+    .notif-item.unread{background:#fff9e6;border-color:#ffe8a3}
+    .notif-title{font-weight:800;margin:0 0 6px}
+    .notif-time{font-size:.85rem;color:#666}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <header>
-    <div><img src="logo.png" class="logo"/> <strong>Admin Dashboard</strong></div>
-    <button class="btn btn-logout" id="logoutBtn">Logout</button>
+    <div class="topbar">
+      <img src="logo.png" class="logo" alt="Shakuntlam"/>
+      <strong>User Dashboard</strong>
+    </div>
+    <div class="topbar">
+      <span id="helloName">Hi, User</span>
+      <span class="pill" id="notifBadge"><span class="dot" id="notifDot" style="display:none"></span><span id="notifCount">0</span> new</span>
+      <button class="btn btn-gray" id="logoutBtn">Logout</button>
+    </div>
   </header>
 
   <div class="container">
+    <div class="grid">
+      <div class="card">
+        <h2>Points Balance</h2>
+        <div class="balance" id="pointsBalance">0</div>
 
-    <!-- Stats -->
-    <div class="stats">
-      <div class="stat-box">
-        <div>Total Users</div>
-        <div id="statUsers" class="stat-num">0</div>
+        <div class="tabs">
+          <div class="tab active" data-tab="claim">Claim Points</div>
+          <div class="tab" data-tab="profile">Profile</div>
+          <div class="tab" data-tab="notifications">Notifications</div>
+        </div>
+
+        <!-- Claim Points -->
+        <div id="tab-claim">
+          <label>Bill Number</label>
+          <input id="billNo" type="text" placeholder="e.g. INV-12345" />
+          <label>Bill Amount (₹)</label>
+          <input id="billAmount" type="number" min="0" />
+          <button class="btn btn-green" id="claimBtn">Claim 1% Points</button>
+          <div class="msg" id="claimMsg"></div>
+
+          <h3 style="margin-top:22px">My Claims</h3>
+          <table>
+            <thead><tr><th>Bill #</th><th>Amount</th><th>Points Credited</th><th>Date</th></tr></thead>
+            <tbody id="claimsTable"></tbody>
+          </table>
+        </div>
+
+        <!-- Profile -->
+        <div id="tab-profile" class="hidden">
+          <label>Full Name</label>
+          <input id="pName" type="text"/>
+          <label>Email (read-only)</label>
+          <input id="pEmail" type="email" disabled/>
+          <label>Phone</label>
+          <input id="pPhone" type="tel"/>
+
+          <div class="row">
+            <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+            <button class="btn btn-gray" id="changePwdBtn">Change Password</button>
+          </div>
+          <div class="msg" id="profileMsg"></div>
+        </div>
+
+        <!-- Notifications -->
+        <div id="tab-notifications" class="hidden">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h3 style="margin:0">Latest Notifications</h3>
+            <button class="btn btn-primary" id="markAllReadBtn">Mark all as read</button>
+          </div>
+          <div id="notifList" style="margin-top:12px"></div>
+        </div>
       </div>
-      <div class="stat-box">
-        <div>Total Bill Amount</div>
-        <div id="statAmount" class="stat-num">₹0</div>
+
+      <!-- Right side help card -->
+      <div class="card">
+        <h2>How claiming works</h2>
+        <ol>
+          <li>If your <b>Bill #</b> exists in store records, you’ll get <b>1% of the amount</b> as points.</li>
+          <li>If it doesn’t exist, we’ll notify the admin to review it.</li>
+          <li>Points = <code>Math.floor(amount * 0.01)</code></li>
+        </ol>
+        <p>Tip: Keep your bill handy. Duplicates or already-claimed bills won’t be re-credited.</p>
       </div>
-      <div class="stat-box">
-        <div>Total Points Awarded</div>
-        <div id="statPoints" class="stat-num">0</div>
-      </div>
     </div>
-
-    <!-- Admin Profile -->
-    <div class="card">
-      <h2>👤 My Profile</h2>
-      <label>Name</label><br>
-      <input type="text" id="adminName"><br>
-      <label>Email</label><br>
-      <input type="email" id="adminEmail" disabled><br>
-      <label>Change Password</label><br>
-      <input type="password" id="adminPwd" placeholder="New password"><br>
-      <button class="btn btn-edit" id="saveProfileBtn">Save Profile</button>
-      <div class="msg" id="profileMsg"></div>
-    </div>
-
-    <!-- Admin Management (only for superadmin) -->
-    <div class="card" id="adminManageCard" style="display:none">
-      <h2>🛡️ Manage Admins (Super Admin Only)</h2>
-      <input type="email" id="newAdminEmail" placeholder="Admin email">
-      <input type="password" id="newAdminPwd" placeholder="Temp password">
-      <button class="btn btn-add" id="addAdminBtn">Add Admin</button>
-      <div class="msg" id="adminMsg"></div>
-      <table>
-        <thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead>
-        <tbody id="adminsTable"></tbody>
-      </table>
-    </div>
-
-    <!-- Notifications -->
-    <div class="card">
-      <h2>🔔 Send Notification to Users</h2>
-      <input type="text" id="notifTitle" placeholder="Title"><br>
-      <input type="text" id="notifMsg" placeholder="Message"><br>
-      <button class="btn btn-add" id="sendNotifBtn">Send Notification</button>
-      <div class="msg" id="notifMsgBox"></div>
-    </div>
-
-    <!-- Existing sections here (Inbox, Bills, Users) ... -->
   </div>
 
   <!-- Firebase v8 -->
@@ -96,6 +124,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
+    // ===== Init Firebase (use your live config)
     const firebaseConfig = {
       apiKey: "AIzaSyA0fmYGnjo84ZA9ld2HG5fcodySXbykBPw",
       authDomain: "rewards-97547.firebaseapp.com",
@@ -108,88 +137,202 @@
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
-    let currentAdmin = null;
+    let currentUser = null;
+    let notifUnsub = null; // to detach listener on signout
 
-    // Auth Guard
-    auth.onAuthStateChanged(async (user)=>{
-      if (!user) { location.href="index.html"; return; }
-      const snap = await db.collection("users").doc(user.uid).get();
-      if (!snap.exists || (snap.data().role!=="admin" && snap.data().role!=="superadmin")){
-        alert("Access denied!");
-        auth.signOut();
-      } else {
-        currentAdmin = { uid:user.uid, email:user.email, role:snap.data().role };
-        document.getElementById("adminName").value = snap.data().name || "";
-        document.getElementById("adminEmail").value = user.email;
-        if(snap.data().role==="superadmin") {
-          document.getElementById("adminManageCard").style.display="block";
-          loadAdmins();
-        }
-      }
+    // ===== Auth Guard
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) { location.href = 'user-login.html'; return; }
+      currentUser = user;
+      document.getElementById('helloName').textContent = 'Hi, ' + (user.displayName || 'User');
+      await ensureUserDoc();
+      loadProfileAndPoints(user.uid);
+      subscribeClaims(user.uid);
+      subscribeNotifications(user.uid);
     });
 
-    // Logout
-    document.getElementById("logoutBtn").onclick=()=>auth.signOut();
-
-    // Save profile
-    document.getElementById("saveProfileBtn").onclick=async()=>{
-      const msg=document.getElementById("profileMsg"); msg.textContent="";
-      try{
-        const newName=document.getElementById("adminName").value.trim();
-        const newPwd=document.getElementById("adminPwd").value.trim();
-        if(newName) await db.collection("users").doc(currentAdmin.uid).set({ name:newName },{merge:true});
-        if(newPwd) await auth.currentUser.updatePassword(newPwd);
-        msg.style.color="#28a745"; msg.textContent="Profile updated!";
-      }catch(e){ msg.style.color="#dc3545"; msg.textContent=e.message; }
-    };
-
-    // Superadmin: Load admins
-    async function loadAdmins(){
-      db.collection("users").where("role","in",["admin","superadmin"]).onSnapshot(snap=>{
-        const tbody=document.getElementById("adminsTable");
-        tbody.innerHTML="";
-        snap.forEach(doc=>{
-          const d=doc.data();
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>${d.email}</td><td>${d.role}</td>
-            <td>${d.role==="superadmin"?"-":'<button class="btn btn-danger">Remove</button>'}</td>`;
-          if(d.role!=="superadmin"){
-            tr.querySelector(".btn-danger").onclick=async()=>{
-              await db.collection("users").doc(doc.id).update({ role:"user" });
-              alert("Admin removed");
-            };
-          }
-          tbody.appendChild(tr);
-        });
-      });
+    async function ensureUserDoc(){
+      const ref = db.collection('users').doc(currentUser.uid);
+      const snap = await ref.get();
+      if(!snap.exists){
+        await ref.set({
+          name: currentUser.displayName || '',
+          email: currentUser.email,
+          phone: '',
+          points: 0,
+          role: 'user',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+      }
     }
 
-    // Add Admin
-    document.getElementById("addAdminBtn").onclick=async()=>{
-      const email=document.getElementById("newAdminEmail").value.trim();
-      const pwd=document.getElementById("newAdminPwd").value.trim();
-      const msg=document.getElementById("adminMsg"); msg.textContent="";
-      try{
-        // Note: Normally you'd create user via Firebase Admin SDK (server side)
-        // Here we just record it manually
-        await db.collection("pending_admins").add({ email, pwd, createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-        msg.style.color="#28a745"; msg.textContent="Admin request saved. Create via Firebase Console/Auth.";
-      }catch(e){ msg.style.color="#dc3545"; msg.textContent=e.message; }
+    // ===== Tabs
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('tab-claim').classList.toggle('hidden', t.dataset.tab !== 'claim');
+      document.getElementById('tab-profile').classList.toggle('hidden', t.dataset.tab !== 'profile');
+      document.getElementById('tab-notifications').classList.toggle('hidden', t.dataset.tab !== 'notifications');
+    }));
+
+    // ===== Load Profile + Points
+    async function loadProfileAndPoints(uid) {
+      const uRef = db.collection('users').doc(uid);
+      const snap = await uRef.get();
+      const data = snap.exists ? snap.data() : { name: currentUser.displayName||'', email: currentUser.email, phone:'', points:0 };
+      document.getElementById('pointsBalance').textContent = data.points || 0;
+      document.getElementById('pName').value  = data.name || '';
+      document.getElementById('pEmail').value = data.email || currentUser.email || '';
+      document.getElementById('pPhone').value = data.phone || '';
+    }
+
+    // ===== Save Profile (name, phone)
+    document.getElementById('saveProfileBtn').onclick = async () => {
+      const msg = document.getElementById('profileMsg'); msg.textContent='';
+      try {
+        const name  = document.getElementById('pName').value.trim();
+        const phone = document.getElementById('pPhone').value.trim();
+        if(name) await currentUser.updateProfile({ displayName: name });
+        await db.collection('users').doc(currentUser.uid).set({ name, email: currentUser.email, phone }, { merge:true });
+        document.getElementById('helloName').textContent = 'Hi, ' + (name || 'User');
+        msg.style.color = '#28a745'; msg.textContent = 'Profile saved.';
+      } catch(e){ msg.style.color='#dc3545'; msg.textContent = e.message; }
     };
 
-    // Send Notification
-    document.getElementById("sendNotifBtn").onclick=async()=>{
-      const title=document.getElementById("notifTitle").value.trim();
-      const message=document.getElementById("notifMsg").value.trim();
-      const box=document.getElementById("notifMsgBox"); box.textContent="";
-      if(!title||!message){ box.style.color="#dc3545"; box.textContent="Fill title & message"; return; }
-      await db.collection("notifications").add({
-        title,message,createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      });
-      box.style.color="#28a745"; box.textContent="Notification sent!";
-      document.getElementById("notifTitle").value="";
-      document.getElementById("notifMsg").value="";
+    // ===== Change Password (send reset email)
+    document.getElementById('changePwdBtn').onclick = async () => {
+      const msg = document.getElementById('profileMsg'); msg.textContent='';
+      try {
+        await auth.sendPasswordResetEmail(currentUser.email);
+        msg.style.color = '#28a745';
+        msg.textContent = 'Password reset email sent to ' + currentUser.email;
+      } catch(e){ msg.style.color='#dc3545'; msg.textContent = e.message; }
     };
+
+    // ===== Logout
+    document.getElementById('logoutBtn').onclick = () => auth.signOut();
+
+    // ===== Claim Points Logic
+    document.getElementById('claimBtn').onclick = async () => {
+      const claimMsg = document.getElementById('claimMsg'); claimMsg.textContent='';
+      const billNo = document.getElementById('billNo').value.trim();
+      const amount = parseFloat(document.getElementById('billAmount').value);
+      if (!billNo || isNaN(amount) || amount <= 0) {
+        claimMsg.style.color='#dc3545'; claimMsg.textContent = 'Enter a valid bill number and amount.'; return;
+      }
+
+      try {
+        const billDoc = await db.collection('bills').doc(billNo).get();
+        if (billDoc.exists) {
+          const bill = billDoc.data();
+          if (bill.claimedBy) { claimMsg.style.color='#dc3545'; claimMsg.textContent = 'This bill is already claimed.'; return; }
+          if (amount > bill.amount) { claimMsg.style.color='#dc3545'; claimMsg.textContent = `Max claimable for this bill is ₹${bill.amount}.`; return; }
+
+          const points = Math.floor(amount * 0.01);
+          const uRef = db.collection('users').doc(currentUser.uid);
+
+          await db.runTransaction(async (tx) => {
+            const uSnap = await tx.get(uRef);
+            const curPoints = (uSnap.exists && uSnap.data().points) ? uSnap.data().points : 0;
+            tx.update(uRef, { points: curPoints + points });
+            tx.set(
+              uRef.collection('claims').doc(billNo),
+              { billNo, amount, points, createdAt: firebase.firestore.FieldValue.serverTimestamp() }
+            );
+            tx.update(db.collection('bills').doc(billNo), { claimedBy: currentUser.uid, claimedAt: firebase.firestore.FieldValue.serverTimestamp(), claimedAmount: amount, claimedPoints: points });
+          });
+
+          claimMsg.style.color='#28a745';
+          claimMsg.textContent = `Success! ₹${amount} credited → ${points} points.`;
+          loadProfileAndPoints(currentUser.uid);
+
+        } else {
+          await db.collection('admin_inbox').add({
+            type: 'bill_not_found', billNo, amount, userId: currentUser.uid, userEmail: currentUser.email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          claimMsg.style.color='#ffc107';
+          claimMsg.textContent = 'Bill not found. Sent to admin for verification.';
+        }
+        document.getElementById('billNo').value = '';
+        document.getElementById('billAmount').value = '';
+      } catch (e) {
+        claimMsg.style.color='#dc3545'; claimMsg.textContent = e.message;
+      }
+    };
+
+    // ===== My Claims (live)
+    function subscribeClaims(uid){
+      db.collection('users').doc(uid).collection('claims').orderBy('createdAt','desc')
+        .onSnapshot(snap => {
+          const tbody = document.getElementById('claimsTable');
+          tbody.innerHTML = '';
+          snap.forEach(doc=>{
+            const c = doc.data();
+            const tr = document.createElement('tr');
+            const date = c.createdAt ? c.createdAt.toDate().toLocaleString() : '-';
+            tr.innerHTML = `<td>${c.billNo}</td><td>₹${c.amount}</td><td>${c.points}</td><td>${date}</td>`;
+            tbody.appendChild(tr);
+          });
+        });
+    }
+
+    // ===== Notifications (real-time)
+    function subscribeNotifications(uid){
+      if (notifUnsub) notifUnsub();
+
+      // Listen to all notifications
+      notifUnsub = db.collection('notifications').orderBy('createdAt','desc').onSnapshot(async snap=>{
+        const list = document.getElementById('notifList');
+        list.innerHTML = '';
+
+        // fetch read status map for this user
+        const readsSnap = await db.collection('users').doc(uid).collection('notif_reads').get();
+        const readMap = {};
+        readsSnap.forEach(d=>{ readMap[d.id] = true; });
+
+        let unreadCount = 0;
+        snap.forEach(doc=>{
+          const n = doc.data();
+          const isRead = !!readMap[doc.id];
+          if(!isRead) unreadCount++;
+          const div = document.createElement('div');
+          div.className = 'notif-item' + (isRead? '' : ' unread');
+          const when = n.createdAt ? n.createdAt.toDate().toLocaleString() : '';
+          div.innerHTML = `
+            <div class="notif-title">${n.title || 'Notification'}</div>
+            <div>${n.message || ''}</div>
+            <div class="notif-time">${when}</div>
+            <div style="margin-top:8px"><button class="btn btn-gray" data-id="${doc.id}">Mark as read</button></div>
+          `;
+          div.querySelector('button').onclick = () => markRead(doc.id);
+          list.appendChild(div);
+        });
+
+        // badge
+        document.getElementById('notifCount').textContent = unreadCount;
+        document.getElementById('notifDot').style.display = unreadCount>0 ? 'inline-block' : 'none';
+      });
+
+      // mark single notification as read
+      async function markRead(id){
+        await db.collection('users').doc(uid).collection('notif_reads').doc(id).set({
+          readAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      // mark all as read
+      document.getElementById('markAllReadBtn').onclick = async ()=>{
+        const snap = await db.collection('notifications').get();
+        const batch = db.batch();
+        snap.forEach(d=>{
+          const r = db.collection('users').doc(uid).collection('notif_reads').doc(d.id);
+          batch.set(r, { readAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+        });
+        await batch.commit();
+      };
+    }
   </script>
 </body>
 </html>
