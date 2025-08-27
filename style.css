@@ -19,13 +19,21 @@
     .stat-num{font-size:1.8rem;font-weight:700;color:#007bff}
     input[type="number"],input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px}
     #addBillMsg{margin-top:8px;font-weight:600}
-
-
-
-
-
-
-
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+    .balance{font-size:2.2rem;font-weight:800;color:#007bff}
+    .tab{padding:8px 12px;border-radius:999px;background:#e9ecef;cursor:pointer;font-weight:600}
+    .tab.active{background:#007bff;color:#fff}
+    .hidden{display:none}
+    label{display:block;margin-top:12px;font-weight:600}
+    input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px}
+    .btn-primary{background:#007bff}
+    .btn-green{background:#28a745}
+    .btn-gray{background:#6c757d}
+    .row{display:flex;gap:10px;align-items:center}
+    .msg{margin-top:8px;min-height:20px}
+    .topbar{display:flex;gap:12px;align-items:center}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}
+                           }
       display: flex; justify-content: center; align-items: center;
       height: 100vh; margin: 0; font-family: Arial, sans-serif;
       background: #f0f2f5;
@@ -49,9 +57,6 @@
     }
     .btn-login:hover { background: #0056b3; }
     .error { color: red; font-size: 0.9rem; margin-top: 10px; text-align: center; }
-
-
-
 notifications/{autoId} {
   title: "Points adjusted",
   message: "Your bill INV-1002 was verified. Points updated.",
