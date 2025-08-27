@@ -4,9 +4,27 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard - Shakuntlam</title>
-   <link rel="stylesheet" href="style.css">
-   
   <style>
+    body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
+    header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .logo{height:36px}
+    .container{max-width:1300px;margin:28px auto;padding:0 16px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:20px;margin-bottom:20px}
+    h2{margin:0 0 12px}
+    table{width:100%;border-collapse:collapse;margin-top:12px}
+    th,td{border:1px solid #eee;padding:8px;text-align:left}
+    thead{background:#f8f9fa}
+    .btn{padding:6px 12px;border:none;border-radius:6px;font-weight:600;color:#fff;cursor:pointer}
+    .btn-approve{background:#28a745}
+    .btn-reject{background:#dc3545}
+    .btn-logout{background:#6c757d}
+    .btn-edit{background:#007bff}
+    .btn-add{background:#17a2b8;margin-top:10px}
+    .stats{display:flex;gap:20px;margin-bottom:20px}
+    .stat-box{flex:1;background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.05);text-align:center}
+    .stat-num{font-size:1.8rem;font-weight:700;color:#007bff}
+    input[type="number"],input[type="text"]{padding:6px;border:1px solid #ccc;border-radius:4px}
+    #addBillMsg{margin-top:8px;font-weight:600}
   </style>
 </head>
 <body>
@@ -272,5 +290,3 @@
   </script>
 </body>
 </html>
-
-
