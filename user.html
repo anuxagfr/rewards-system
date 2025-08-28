@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard - Rewards</title>
+  <style>
+    body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
+    header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .logo{height:36px}
+    .container{max-width:1100px;margin:28px auto;padding:0 16px}
+    .grid{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:20px}
+    h2{margin:0 0 12px}
+    .balance{font-size:2.2rem;font-weight:800;color:#007bff}
+    .tabs{display:flex;gap:10px;margin-bottom:14px}
+    .tab{padding:8px 12px;border-radius:999px;background:#e9ecef;cursor:pointer;font-weight:600}
+    .tab.active{background:#007bff;color:#fff}
+    .hidden{display:none}
+    label{display:block;margin-top:12px;font-weight:600}
+    input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px}
+    .btn{margin-top:14px;padding:12px 16px;border:none;border-radius:8px;font-weight:700;color:#fff;cursor:pointer}
+    .btn-primary{background:#007bff}
+    .btn-green{background:#28a745}
+    .btn-gray{background:#6c757d}
+    .row{display:flex;gap:10px;align-items:center}
+    .msg{margin-top:8px;min-height:20px}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border:1px solid #eee;padding:10px;text-align:left}
+    thead{background:#f8f9fa}
+    .topbar{display:flex;gap:12px;align-items:center}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <img src="logo.png" class="logo" alt="Shakuntlam"/>
+      <strong>User Dashboard</strong>
+    </div>
+    <div class="topbar">
+      <span id="helloName">Hi, User</span>
+      <button class="btn btn-gray" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="grid">
+      <div class="card">
+        <h2>Points Balance</h2>
+        <div class="balance" id="pointsBalance">0</div>
+
+        <div class="tabs">
+          <div class="tab active" data-tab="claim">Claim Points</div>
+          <div class="tab" data-tab="profile">Profile</div>
+        </div>
+
+        <!-- Claim Points -->
+        <div id="tab-claim">
+          <label>Bill Number</label>
+          <input id="billNo" type="text" placeholder="e.g. INV-12345" />
+          <label>Bill Amount (₹)</label>
+          <input id="billAmount" type="number" min="0" />
+          <button class="btn btn-green" id="claimBtn">Claim 1% Points</button>
+          <div class="msg" id="claimMsg"></div>
+
+          <h3 style="margin-top:22px">My Claims</h3>
+          <table>
+            <thead><tr><th>Bill #</th><th>Amount</th><th>Points Credited</th><th>Date</th></tr></thead>
+            <tbody id="claimsTable"></tbody>
+          </table>
+        </div>
+
+        <!-- Profile -->
+        <div id="tab-profile" class="hidden">
+          <label>Full Name</label>
+          <input id="pName" type="text"/>
+          <label>Email (read-only)</label>
+          <input id="pEmail" type="email" disabled/>
+          <label>Phone</label>
+          <input id="pPhone" type="tel"/>
+
+          <div class="row">
+            <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+            <button class="btn btn-gray" id="changePwdBtn">Change Password</button>
+          </div>
+          <div class="msg" id="profileMsg"></div>
+        </div>
+      </div>
+
+      <!-- Right side: Notifications -->
+      <div class="card">
+        <h2>🔔 Notifications</h2>
+        <ul id="userNotifList"></ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // ===== Init
+    const firebaseConfig = {
+      apiKey: "AIzaSyA0fmYGnjo84ZA9ld2HG5fcodySXbykBPw",
+      authDomain: "rewards-97547.firebaseapp.com",
+      projectId: "rewards-97547",
+      storageBucket: "rewards-97547.appspot.com",
+      messagingSenderId: "386741383248",
+      appId: "1:386741383248:web:9be63e316c8c791823a155",
+      measurementId: "G-79D3270T1P"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
+
+    // ===== Auth guard
+    auth.onAuthStateChanged(async (user)=>{
+      if(!user){ location.href = "index.html"; return; }
+      window.currentUser = user;
+      helloName.textContent = "Hi, " + (user.displayName || "User");
+      loadProfileAndPoints(user.uid);
+      subscribeClaims(user.uid);
+      subscribeNotifications();
+    });
+
+    // ===== Tabs
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.onclick = ()=>{
+        document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('tab-claim').classList.toggle('hidden', t.dataset.tab !== 'claim');
+        document.getElementById('tab-profile').classList.toggle('hidden', t.dataset.tab !== 'profile');
+      };
+    });
+
+    // ===== Load Profile + Points
+    async function loadProfileAndPoints(uid){
+      const uRef = db.collection('users').doc(uid);
+      const snap = await uRef.get();
+      const data = snap.exists ? snap.data() : { name: currentUser.displayName||'', email: currentUser.email, phone:'', points:0 };
+      pointsBalance.textContent = data.points || 0;
+      pName.value  = data.name || '';
+      pEmail.value = data.email || currentUser.email || '';
+      pPhone.value = data.phone || '';
+    }
+
+    // ===== Save Profile
+    saveProfileBtn.onclick = async ()=>{
+      profileMsg.textContent = '';
+      try{
+        const name  = pName.value.trim();
+        const phone = pPhone.value.trim();
+        await currentUser.updateProfile({ displayName: name });
+        await db.collection('users').doc(currentUser.uid).set({
+          name, email: currentUser.email, phone
+        }, { merge: true });
+        helloName.textContent = 'Hi, ' + (name || 'User');
+        profileMsg.style.color = '#28a745';
+        profileMsg.textContent = 'Profile saved.';
+      }catch(e){ profileMsg.style.color = '#dc3545'; profileMsg.textContent = e.message; }
+    };
+
+    // ===== Change Password
+    changePwdBtn.onclick = async ()=>{
+      profileMsg.textContent = '';
+      try{
+        await auth.sendPasswordResetEmail(currentUser.email);
+        profileMsg.style.color = '#28a745';
+        profileMsg.textContent = 'Password reset email sent to ' + currentUser.email;
+      }catch(e){ profileMsg.style.color = '#dc3545'; profileMsg.textContent = e.message; }
+    };
+
+    // ===== Logout
+    logoutBtn.onclick = ()=> auth.signOut();
+
+    // ===== Claim Points
+    claimBtn.onclick = async ()=>{
+      claimMsg.textContent = '';
+      const billNo = billNoInput();
+      const amount = parseFloat(billAmount.value);
+      if(!billNo || isNaN(amount) || amount<=0){
+        showClaimError('Enter a valid bill number and amount.'); return;
+      }
+
+      try{
+        const bRef = db.collection('bills').doc(billNo);
+        const bSnap = await bRef.get();
+
+        if (bSnap.exists){
+          const b = bSnap.data();
+
+          if (b.claimedBy){
+            showClaimError('This bill is already claimed.'); return;
+          }
+
+          // Prevent over-claiming: user cannot claim more than stored bill amount
+          if (amount !== Number(b.amount)){
+            showClaimError(`Amount mismatch. Bill amount is ₹${b.amount}.`); return;
+          }
+
+          const points = Math.floor(amount * 0.01);
+          const uRef = db.collection('users').doc(currentUser.uid);
+
+          // Transaction: add points, add claim, mark bill claimed
+          await db.runTransaction(async (tx)=>{
+            const uSnap = await tx.get(uRef);
+            const cur = uSnap.exists && uSnap.data().points ? uSnap.data().points : 0;
+
+            tx.update(uRef, { points: cur + points });
+
+            const claimRef = uRef.collection('claims').doc();
+            tx.set(claimRef, {
+              billNo, amount, points,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            tx.update(bRef, {
+              amount: b.amount, // keep original
+              claimedBy: currentUser.uid,
+              claimedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+
+          claimMsg.style.color='#28a745';
+          claimMsg.textContent = `Success! ₹${amount} → +${points} points.`;
+          billNoInput(''); billAmount.value='';
+          loadProfileAndPoints(currentUser.uid);
+
+        } else {
+          // Not found -> notify admin for review
+          await db.collection('admin_inbox').add({
+            type: 'bill_not_found',
+            billNo, amount,
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          claimMsg.style.color='#ffc107';
+          claimMsg.textContent = 'Bill not found. Sent to admin for verification.';
+          billNoInput(''); billAmount.value='';
+        }
+      }catch(e){
+        showClaimError(e.message);
+      }
+    };
+
+    function billNoInput(v){ if(v===undefined) return billNo.value.trim(); billNo.value=v; }
+    function showClaimError(t){ claimMsg.style.color='#dc3545'; claimMsg.textContent=t; }
+
+    // ===== My Claims live
+    function subscribeClaims(uid){
+      db.collection('users').doc(uid).collection('claims').orderBy('createdAt','desc')
+        .onSnapshot(snap=>{
+          claimsTable.innerHTML='';
+          snap.forEach(doc=>{
+            const c = doc.data();
+            const date = c.createdAt ? c.createdAt.toDate().toLocaleString() : '-';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${c.billNo}</td><td>₹${c.amount}</td><td>${c.points}</td><td>${date}</td>`;
+            claimsTable.appendChild(tr);
+          });
+        });
+    }
+
+    // ===== Notifications
+    function subscribeNotifications(){
+      db.collection('notifications').orderBy('createdAt','desc')
+        .onSnapshot(snap=>{
+          userNotifList.innerHTML='';
+          snap.forEach(doc=>{
+            const d = doc.data();
+            const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
+            const li = document.createElement('li');
+            li.textContent = `[${date}] ${d.message}`;
+            userNotifList.appendChild(li);
+          });
+        });
+    }
+  </script>
+</body>
+</html>
