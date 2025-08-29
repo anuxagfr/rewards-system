@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Shakuntlam Rewards</title>
   <style>
@@ -22,7 +22,6 @@
     .error{color:red;font-size:0.9rem;text-align:center}
     .success{color:green;font-size:0.9rem;text-align:center}
     .close{position:absolute;right:10px;top:10px;cursor:pointer;font-size:1.2rem}
-    button:disabled{opacity:0.6;cursor:not-allowed}
   </style>
 </head>
 <body>
@@ -50,7 +49,7 @@
       <form id="loginForm">
         <input type="email" id="loginEmail" placeholder="Email" required/>
         <input type="password" id="loginPassword" placeholder="Password" required/>
-        <button type="submit" id="loginSubmit">Login</button>
+        <button type="submit">Login</button>
         <div id="loginError" class="error"></div>
         <span class="toggle" id="forgotLink">Forgot Password?</span>
         <span class="toggle" id="toSignup">Don’t have account? Sign Up</span>
@@ -62,7 +61,7 @@
         <input type="email" id="signupEmail" placeholder="Email" required/>
         <input type="tel" id="signupPhone" placeholder="Phone Number"/>
         <input type="password" id="signupPassword" placeholder="Password" required/>
-        <button type="submit" id="signupSubmit">Register</button>
+        <button type="submit">Register</button>
         <div id="signupError" class="error"></div>
         <div id="signupSuccess" class="success"></div>
         <span class="toggle" id="toLogin">Already have account? Login</span>
@@ -71,7 +70,7 @@
       <!-- Reset -->
       <form id="resetForm" style="display:none;">
         <input type="email" id="resetEmail" placeholder="Enter email" required/>
-        <button type="submit" id="resetSubmit">Send Reset Link</button>
+        <button type="submit">Send Reset Link</button>
         <div id="resetMsg"></div>
         <span class="toggle" id="backLogin">Back to Login</span>
       </form>
@@ -79,7 +78,6 @@
   </div>
 
 <script>
-  // ===== Modal switching
   const modal=document.getElementById('authModal');
   const loginBtn=document.getElementById('loginBtn');
   const signupBtn=document.getElementById('signupBtn');
@@ -90,74 +88,41 @@
   const resetForm=document.getElementById('resetForm');
   const modalTitle=document.getElementById('modalTitle');
 
-  loginBtn.onclick=()=>{showForm("login")}
-  signupBtn.onclick=()=>{showForm("signup")}
+  loginBtn.onclick=()=>{modal.style.display="block";modalTitle.textContent="Login";loginForm.style.display="block";signupForm.style.display="none";resetForm.style.display="none";}
+  signupBtn.onclick=()=>{modal.style.display="block";modalTitle.textContent="Sign Up";signupForm.style.display="block";loginForm.style.display="none";resetForm.style.display="none";}
   joinNow.onclick=()=>signupBtn.click();
   closeModal.onclick=()=>modal.style.display="none";
   window.onclick=e=>{if(e.target==modal)modal.style.display="none";}
   document.getElementById("toSignup").onclick=()=>signupBtn.click();
   document.getElementById("toLogin").onclick=()=>loginBtn.click();
-  document.getElementById("forgotLink").onclick=()=>showForm("reset");
+  document.getElementById("forgotLink").onclick=()=>{modalTitle.textContent="Reset Password";loginForm.style.display="none";signupForm.style.display="none";resetForm.style.display="block";}
   document.getElementById("backLogin").onclick=()=>loginBtn.click();
-
-  function showForm(type){
-    modal.style.display="block";
-    loginForm.style.display = (type==="login")?"block":"none";
-    signupForm.style.display= (type==="signup")?"block":"none";
-    resetForm.style.display  = (type==="reset")?"block":"none";
-    modalTitle.textContent = type==="login"?"Login":type==="signup"?"Sign Up":"Reset Password";
-  }
 </script>
 
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCAcVmMBM5cuXmydgj3LpunqXgjPVWW2SI",
-    authDomain: "reward-20359.firebaseapp.com",
-    projectId: "reward-20359",
-    storageBucket: "reward-20359.firebasestorage.app",
-    messagingSenderId: "577324459963",
-    appId: "1:577324459963:web:d969522318bcb229ae869e",
-    measurementId: "G-TX647FT78R"
-  };
+  const firebaseConfig = { /* 🔑 your config here */ };
   const app=initializeApp(firebaseConfig);
   const auth=getAuth(app);
   const db=getFirestore(app);
 
-  // ===== Prevent multiple clicks helper
-  function disableBtn(btn,disable=true){
-    if(disable) btn.setAttribute("disabled","true");
-    else btn.removeAttribute("disabled");
-  }
-
-  // ===== Signup
+  // Signup
   signupForm.addEventListener("submit",async(e)=>{
     e.preventDefault();
-    const btn=document.getElementById("signupSubmit");
-    disableBtn(btn,true);
-    signupError.textContent=""; signupSuccess.textContent="";
     try{
       const u=await createUserWithEmailAndPassword(auth,signupEmail.value,signupPassword.value);
-      await setDoc(doc(db,"users",u.user.uid),{
-        name:signupName.value,email:signupEmail.value,
-        phone:signupPhone.value,role:"user",points:0
-      });
       signupSuccess.textContent="Registered! Redirecting...";
       setTimeout(()=>location.href="user.html",1500);
-    }catch(err){ signupError.textContent=err.message; }
-    disableBtn(btn,false);
+    }catch(err){signupError.textContent=err.message;}
   });
 
-  // ===== Login
+  // Login
   loginForm.addEventListener("submit",async(e)=>{
     e.preventDefault();
-    const btn=document.getElementById("loginSubmit");
-    disableBtn(btn,true);
-    loginError.textContent="";
     try{
       const u=await signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value);
       const snap=await getDoc(doc(db,"users",u.user.uid));
@@ -165,21 +130,16 @@
         if(snap.data().role==="admin") location.href="admin.html";
         else location.href="user.html";
       }else loginError.textContent="Role not assigned.";
-    }catch(err){ loginError.textContent=err.message; }
-    disableBtn(btn,false);
+    }catch(err){loginError.textContent=err.message;}
   });
 
-  // ===== Reset
+  // Reset
   resetForm.addEventListener("submit",async(e)=>{
     e.preventDefault();
-    const btn=document.getElementById("resetSubmit");
-    disableBtn(btn,true);
-    resetMsg.textContent="";
     try{
       await sendPasswordResetEmail(auth,resetEmail.value);
-      resetMsg.textContent="Email sent!"; resetMsg.style.color="green";
-    }catch(err){ resetMsg.textContent=err.message; resetMsg.style.color="red"; }
-    disableBtn(btn,false);
+      resetMsg.textContent="Email sent!";resetMsg.style.color="green";
+    }catch(err){resetMsg.textContent=err.message;resetMsg.style.color="red";}
   });
 </script>
 </body>
