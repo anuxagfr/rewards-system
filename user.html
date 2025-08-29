@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>User Dashboard - Rewards</title>
   <style>
-    body{margin:0;background:#f0f2f5;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#333}
-    header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:14px 22px;border-bottom:1px solid #eaeaea;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    body{margin:0;background:#f0f2f5;font-family:Segoe UI,Arial;color:#333}
+    header{display:flex;justify-content:space-between;align-items:center;background:#4a148c;color:#fff;padding:14px 22px}
     .logo{height:36px}
     .container{max-width:1100px;margin:28px auto;padding:0 16px}
     .grid{display:grid;grid-template-columns:2fr 1fr;gap:22px}
@@ -30,6 +30,7 @@
     thead{background:#f8f9fa}
     .topbar{display:flex;gap:12px;align-items:center}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    button:disabled{opacity:0.6;cursor:not-allowed}
   </style>
 </head>
 <body>
@@ -46,6 +47,7 @@
 
   <div class="container">
     <div class="grid">
+      <!-- Left -->
       <div class="card">
         <h2>Points Balance</h2>
         <div class="balance" id="pointsBalance">0</div>
@@ -66,7 +68,7 @@
 
           <h3 style="margin-top:22px">My Claims</h3>
           <table>
-            <thead><tr><th>Bill #</th><th>Amount</th><th>Points Credited</th><th>Date</th></tr></thead>
+            <thead><tr><th>Bill #</th><th>Amount</th><th>Points</th><th>Date</th></tr></thead>
             <tbody id="claimsTable"></tbody>
           </table>
         </div>
@@ -88,7 +90,7 @@
         </div>
       </div>
 
-      <!-- Right side: Notifications -->
+      <!-- Right -->
       <div class="card">
         <h2>🔔 Notifications</h2>
         <ul id="userNotifList"></ul>
@@ -96,30 +98,30 @@
     </div>
   </div>
 
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Firebase v10 -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, onAuthStateChanged, updateProfile, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, onSnapshot, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-  <script>
-    // ===== Init
     const firebaseConfig = {
-  apiKey: "AIzaSyCAcVmMBM5cuXmydgj3LpunqXgjPVWW2SI",
-  authDomain: "reward-20359.firebaseapp.com",
-  projectId: "reward-20359",
-  storageBucket: "reward-20359.firebasestorage.app",
-  messagingSenderId: "577324459963",
-  appId: "1:577324459963:web:d969522318bcb229ae869e",
-  measurementId: "G-TX647FT78R"
-};
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db   = firebase.firestore();
+      apiKey: "AIzaSyCAcVmMBM5cuXmydgj3LpunqXgjPVWW2SI",
+      authDomain: "reward-20359.firebaseapp.com",
+      projectId: "reward-20359",
+      storageBucket: "reward-20359.firebasestorage.app",
+      messagingSenderId: "577324459963",
+      appId: "1:577324459963:web:d969522318bcb229ae869e"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser=null;
 
     // ===== Auth guard
-    auth.onAuthStateChanged(async (user)=>{
-      if(!user){ location.href = "index.html"; return; }
-      window.currentUser = user;
+    onAuthStateChanged(auth, async (user)=>{
+      if(!user){ location.href="index.html"; return; }
+      currentUser=user;
       helloName.textContent = "Hi, " + (user.displayName || "User");
       loadProfileAndPoints(user.uid);
       subscribeClaims(user.uid);
@@ -128,158 +130,130 @@
 
     // ===== Tabs
     document.querySelectorAll('.tab').forEach(t=>{
-      t.onclick = ()=>{
+      t.onclick=()=>{
         document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
         t.classList.add('active');
-        document.getElementById('tab-claim').classList.toggle('hidden', t.dataset.tab !== 'claim');
-        document.getElementById('tab-profile').classList.toggle('hidden', t.dataset.tab !== 'profile');
-      };
+        document.getElementById('tab-claim').classList.toggle('hidden', t.dataset.tab!=="claim");
+        document.getElementById('tab-profile').classList.toggle('hidden', t.dataset.tab!=="profile");
+      }
     });
 
     // ===== Load Profile + Points
     async function loadProfileAndPoints(uid){
-      const uRef = db.collection('users').doc(uid);
-      const snap = await uRef.get();
-      const data = snap.exists ? snap.data() : { name: currentUser.displayName||'', email: currentUser.email, phone:'', points:0 };
-      pointsBalance.textContent = data.points || 0;
-      pName.value  = data.name || '';
-      pEmail.value = data.email || currentUser.email || '';
-      pPhone.value = data.phone || '';
+      const snap=await getDoc(doc(db,"users",uid));
+      const data=snap.exists()?snap.data():{name:"",email:currentUser.email,phone:"",points:0};
+      pointsBalance.textContent=data.points||0;
+      pName.value=data.name||"";
+      pEmail.value=data.email||currentUser.email;
+      pPhone.value=data.phone||"";
     }
 
     // ===== Save Profile
-    saveProfileBtn.onclick = async ()=>{
-      profileMsg.textContent = '';
+    saveProfileBtn.onclick=async ()=>{
+      profileMsg.textContent="";
+      saveProfileBtn.disabled=true;
       try{
-        const name  = pName.value.trim();
-        const phone = pPhone.value.trim();
-        await currentUser.updateProfile({ displayName: name });
-        await db.collection('users').doc(currentUser.uid).set({
-          name, email: currentUser.email, phone
-        }, { merge: true });
-        helloName.textContent = 'Hi, ' + (name || 'User');
-        profileMsg.style.color = '#28a745';
-        profileMsg.textContent = 'Profile saved.';
-      }catch(e){ profileMsg.style.color = '#dc3545'; profileMsg.textContent = e.message; }
+        const name=pName.value.trim();
+        const phone=pPhone.value.trim();
+        await updateProfile(currentUser,{displayName:name});
+        await setDoc(doc(db,"users",currentUser.uid),{
+          name,email:currentUser.email,phone
+        },{merge:true});
+        helloName.textContent="Hi, "+(name||"User");
+        profileMsg.style.color="green"; profileMsg.textContent="Profile saved.";
+      }catch(e){ profileMsg.style.color="red"; profileMsg.textContent=e.message; }
+      saveProfileBtn.disabled=false;
     };
 
     // ===== Change Password
-    changePwdBtn.onclick = async ()=>{
-      profileMsg.textContent = '';
+    changePwdBtn.onclick=async ()=>{
+      profileMsg.textContent="";
+      changePwdBtn.disabled=true;
       try{
-        await auth.sendPasswordResetEmail(currentUser.email);
-        profileMsg.style.color = '#28a745';
-        profileMsg.textContent = 'Password reset email sent to ' + currentUser.email;
-      }catch(e){ profileMsg.style.color = '#dc3545'; profileMsg.textContent = e.message; }
+        await sendPasswordResetEmail(auth,currentUser.email);
+        profileMsg.style.color="green"; profileMsg.textContent="Reset email sent!";
+      }catch(e){ profileMsg.style.color="red"; profileMsg.textContent=e.message; }
+      changePwdBtn.disabled=false;
     };
 
     // ===== Logout
-    logoutBtn.onclick = ()=> auth.signOut();
+    logoutBtn.onclick=()=>signOut(auth);
 
     // ===== Claim Points
-    claimBtn.onclick = async ()=>{
-      claimMsg.textContent = '';
-      const billNo = billNoInput();
-      const amount = parseFloat(billAmount.value);
-      if(!billNo || isNaN(amount) || amount<=0){
-        showClaimError('Enter a valid bill number and amount.'); return;
-      }
+    claimBtn.onclick=async ()=>{
+      claimMsg.textContent="";
+      claimBtn.disabled=true;
+      const billNo=billNo.value.trim();
+      const amount=parseFloat(billAmount.value);
+      if(!billNo||isNaN(amount)||amount<=0){showClaimError("Enter valid bill/amount");claimBtn.disabled=false;return;}
 
       try{
-        const bRef = db.collection('bills').doc(billNo);
-        const bSnap = await bRef.get();
+        const bRef=doc(db,"bills",billNo);
+        const bSnap=await getDoc(bRef);
 
-        if (bSnap.exists){
-          const b = bSnap.data();
+        if(bSnap.exists()){
+          const b=bSnap.data();
+          if(b.claimedBy){ showClaimError("Already claimed."); claimBtn.disabled=false; return; }
+          if(amount!==Number(b.amount)){ showClaimError(`Mismatch. Bill is ₹${b.amount}`); claimBtn.disabled=false; return; }
 
-          if (b.claimedBy){
-            showClaimError('This bill is already claimed.'); return;
-          }
+          const points=Math.floor(amount*0.01);
+          const uRef=doc(db,"users",currentUser.uid);
 
-          // Prevent over-claiming: user cannot claim more than stored bill amount
-          if (amount !== Number(b.amount)){
-            showClaimError(`Amount mismatch. Bill amount is ₹${b.amount}.`); return;
-          }
-
-          const points = Math.floor(amount * 0.01);
-          const uRef = db.collection('users').doc(currentUser.uid);
-
-          // Transaction: add points, add claim, mark bill claimed
-          await db.runTransaction(async (tx)=>{
-            const uSnap = await tx.get(uRef);
-            const cur = uSnap.exists && uSnap.data().points ? uSnap.data().points : 0;
-
-            tx.update(uRef, { points: cur + points });
-
-            const claimRef = uRef.collection('claims').doc();
-            tx.set(claimRef, {
-              billNo, amount, points,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          await runTransaction(db,async(tx)=>{
+            const uSnap=await tx.get(uRef);
+            const cur=uSnap.exists()?uSnap.data().points||0:0;
+            tx.update(uRef,{points:cur+points});
+            tx.set(doc(collection(uRef,"claims")),{
+              billNo,amount,points,createdAt:serverTimestamp()
             });
-
-            tx.update(bRef, {
-              amount: b.amount, // keep original
-              claimedBy: currentUser.uid,
-              claimedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            tx.update(bRef,{claimedBy:currentUser.uid,claimedAt:serverTimestamp()});
           });
 
-          claimMsg.style.color='#28a745';
-          claimMsg.textContent = `Success! ₹${amount} → +${points} points.`;
-          billNoInput(''); billAmount.value='';
+          claimMsg.style.color="green"; claimMsg.textContent=`Success! +${points} points.`;
+          billNo.value=""; billAmount.value="";
           loadProfileAndPoints(currentUser.uid);
-
-        } else {
-          // Not found -> notify admin for review
-          await db.collection('admin_inbox').add({
-            type: 'bill_not_found',
-            billNo, amount,
-            userId: currentUser.uid,
-            userEmail: currentUser.email,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }else{
+          await addDoc(collection(db,"admin_inbox"),{
+            type:"bill_not_found",billNo,amount,
+            userId:currentUser.uid,userEmail:currentUser.email,createdAt:serverTimestamp()
           });
-          claimMsg.style.color='#ffc107';
-          claimMsg.textContent = 'Bill not found. Sent to admin for verification.';
-          billNoInput(''); billAmount.value='';
+          claimMsg.style.color="orange"; claimMsg.textContent="Bill not found. Sent to admin.";
         }
-      }catch(e){
-        showClaimError(e.message);
-      }
+      }catch(e){ showClaimError(e.message); }
+      claimBtn.disabled=false;
     };
 
-    function billNoInput(v){ if(v===undefined) return billNo.value.trim(); billNo.value=v; }
-    function showClaimError(t){ claimMsg.style.color='#dc3545'; claimMsg.textContent=t; }
+    function showClaimError(msg){ claimMsg.style.color="red"; claimMsg.textContent=msg; }
 
-    // ===== My Claims live
+    // ===== My Claims
     function subscribeClaims(uid){
-      db.collection('users').doc(uid).collection('claims').orderBy('createdAt','desc')
-        .onSnapshot(snap=>{
-          claimsTable.innerHTML='';
-          snap.forEach(doc=>{
-            const c = doc.data();
-            const date = c.createdAt ? c.createdAt.toDate().toLocaleString() : '-';
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${c.billNo}</td><td>₹${c.amount}</td><td>${c.points}</td><td>${date}</td>`;
-            claimsTable.appendChild(tr);
-          });
+      const q=query(collection(db,"users",uid,"claims"),orderBy("createdAt","desc"));
+      onSnapshot(q,(snap)=>{
+        claimsTable.innerHTML="";
+        snap.forEach(docSnap=>{
+          const c=docSnap.data();
+          const date=c.createdAt?c.createdAt.toDate().toLocaleString():"-";
+          const tr=document.createElement("tr");
+          tr.innerHTML=`<td>${c.billNo}</td><td>₹${c.amount}</td><td>${c.points}</td><td>${date}</td>`;
+          claimsTable.appendChild(tr);
         });
+      });
     }
 
     // ===== Notifications
     function subscribeNotifications(){
-      db.collection('notifications').orderBy('createdAt','desc')
-        .onSnapshot(snap=>{
-          userNotifList.innerHTML='';
-          snap.forEach(doc=>{
-            const d = doc.data();
-            const date = d.createdAt ? d.createdAt.toDate().toLocaleString() : '-';
-            const li = document.createElement('li');
-            li.textContent = `[${date}] ${d.message}`;
-            userNotifList.appendChild(li);
-          });
+      const q=query(collection(db,"notifications"),orderBy("createdAt","desc"));
+      onSnapshot(q,(snap)=>{
+        userNotifList.innerHTML="";
+        snap.forEach(d=>{
+          const n=d.data();
+          const date=n.createdAt?n.createdAt.toDate().toLocaleString():"-";
+          const li=document.createElement("li");
+          li.textContent=`[${date}] ${n.message}`;
+          userNotifList.appendChild(li);
         });
+      });
     }
   </script>
 </body>
 </html>
-
