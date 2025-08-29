@@ -5,229 +5,175 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Dashboard - Rewards</title>
   <style>
-    body{margin:0;font-family:Segoe UI,Arial;background:#f0f2f5;color:#333}
-    header{background:#4a148c;color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center}
-    header strong{font-size:1.2rem}
-    .container{max-width:1200px;margin:24px auto;padding:0 16px}
-    .grid{display:grid;grid-template-columns:2fr 1fr;gap:20px}
-    .card{background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.06);padding:20px;margin-bottom:20px}
-    h2{margin:0 0 12px}
-    table{width:100%;border-collapse:collapse;margin-top:12px}
-    th,td{border:1px solid #eee;padding:8px;text-align:left;font-size:0.9rem}
-    thead{background:#f8f9fa}
+    body{margin:0;font-family:Segoe UI,Arial;background:#f4f6f8;color:#333}
+    header{background:#4a148c;color:#fff;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center}
+    header h2{margin:0}
+    .container{padding:20px;max-width:1200px;margin:auto}
+    .stats{display:flex;gap:20px;margin-bottom:20px}
+    .card{flex:1;background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.05)}
+    .card h3{margin:0;font-size:1rem;color:#666}
+    .card .value{font-size:1.5rem;font-weight:bold;color:#4a148c;margin-top:10px}
+    table{width:100%;border-collapse:collapse;background:#fff;margin-top:20px}
+    th,td{border:1px solid #eee;padding:10px;text-align:left}
+    th{background:#f9f9f9}
+    .btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600}
+    .btn-primary{background:#4a148c;color:#fff}
+    .btn-danger{background:#e53935;color:#fff}
+    .btn-green{background:#43a047;color:#fff}
+    .section{background:#fff;padding:20px;margin-top:20px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.05)}
     label{display:block;margin-top:10px;font-weight:600}
-    input,textarea{width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;margin-top:4px}
-    .btn{margin-top:10px;padding:10px 14px;border:none;border-radius:6px;font-weight:600;color:#fff;cursor:pointer}
-    .btn-primary{background:#007bff}
-    .btn-green{background:#28a745}
-    .btn-red{background:#dc3545}
-    .btn-gray{background:#6c757d}
-    button:disabled{opacity:0.6;cursor:not-allowed}
-    .msg{font-size:0.9rem;margin-top:8px}
-    .flex{display:flex;justify-content:space-between;align-items:center}
+    input,textarea{width:100%;padding:8px;margin-top:5px;border:1px solid #ccc;border-radius:6px}
+    .logout{background:#e53935;color:#fff;padding:8px 12px;border-radius:6px;cursor:pointer}
   </style>
 </head>
 <body>
-  <header>
-    <strong>Admin Dashboard</strong>
-    <div>
-      <span id="adminName">Hi, Admin</span>
-      <button class="btn btn-gray" id="logoutBtn">Logout</button>
-    </div>
-  </header>
+<header>
+  <h2>Admin Dashboard</h2>
+  <button class="logout" id="logoutBtn">Logout</button>
+</header>
 
-  <div class="container">
-    <div class="grid">
-      <!-- Left big column -->
-      <div>
-        <!-- Users -->
-        <div class="card">
-          <h2>All Users</h2>
-          <table>
-            <thead><tr><th>Name</th><th>Email</th><th>Points</th><th>Claims</th></tr></thead>
-            <tbody id="usersTable"></tbody>
-          </table>
-        </div>
+<div class="container">
 
-        <!-- Bills -->
-        <div class="card">
-          <h2>Bills</h2>
-          <label>Bill No</label><input id="billNo" />
-          <label>Amount (₹)</label><input id="billAmt" type="number" />
-          <button class="btn btn-green" id="addBillBtn">Add Bill</button>
-          <div class="msg" id="billMsg"></div>
-
-          <h3 style="margin-top:20px">Recent Bills</h3>
-          <table>
-            <thead><tr><th>No</th><th>Amount</th><th>Claimed By</th></tr></thead>
-            <tbody id="billsTable"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Right small column -->
-      <div>
-        <!-- Notifications -->
-        <div class="card">
-          <h2>Send Notification</h2>
-          <textarea id="notifText" rows="3" placeholder="Message..."></textarea>
-          <button class="btn btn-primary" id="sendNotifBtn">Send</button>
-          <div class="msg" id="notifMsg"></div>
-        </div>
-
-        <!-- Profile -->
-        <div class="card">
-          <h2>Admin Profile</h2>
-          <label>Name</label><input id="aName"/>
-          <label>Email (read-only)</label><input id="aEmail" disabled/>
-          <button class="btn btn-primary" id="saveAdminBtn">Save</button>
-          <button class="btn btn-gray" id="resetPwdBtn">Reset Password</button>
-          <div class="msg" id="adminMsg"></div>
-        </div>
-
-        <!-- Manage Admins -->
-        <div class="card">
-          <h2>Manage Admins</h2>
-          <label>New Admin UID</label><input id="newAdminUid" placeholder="Paste user UID"/>
-          <button class="btn btn-green" id="addAdminBtn">Add Admin</button>
-          <label>Remove Admin UID</label><input id="removeAdminUid"/>
-          <button class="btn btn-red" id="removeAdminBtn">Remove Admin</button>
-          <div class="msg" id="manageAdminMsg"></div>
-        </div>
-      </div>
-    </div>
+  <!-- Stats -->
+  <div class="stats">
+    <div class="card"><h3>Total Users</h3><div class="value" id="statUsers">0</div></div>
+    <div class="card"><h3>Total Points</h3><div class="value" id="statPoints">0</div></div>
+    <div class="card"><h3>Total Bill Amount</h3><div class="value" id="statBills">₹0</div></div>
   </div>
 
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, updateProfile, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  <!-- Users Table -->
+  <div class="section">
+    <h3>👥 Users</h3>
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Points</th><th>Role</th><th>Actions</th></tr></thead>
+      <tbody id="usersTable"></tbody>
+    </table>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCAcVmMBM5cuXmydgj3LpunqXgjPVWW2SI",
-      authDomain: "reward-20359.firebaseapp.com",
-      projectId: "reward-20359",
-      storageBucket: "reward-20359.firebasestorage.app",
-      messagingSenderId: "577324459963",
-      appId: "1:577324459963:web:d969522318bcb229ae869e"
-    };
-    const app=initializeApp(firebaseConfig);
-    const auth=getAuth(app);
-    const db=getFirestore(app);
+  <!-- Bills -->
+  <div class="section">
+    <h3>🧾 Manage Bills</h3>
+    <label>Bill Number</label>
+    <input id="billNo" type="text"/>
+    <label>Amount (₹)</label>
+    <input id="billAmount" type="number"/>
+    <button class="btn btn-green" id="addBillBtn">Add Bill</button>
+    <div id="billMsg"></div>
+  </div>
 
-    let currentUser=null;
+  <!-- Notifications -->
+  <div class="section">
+    <h3>🔔 Send Notification</h3>
+    <textarea id="notifMsg" placeholder="Type your message..."></textarea>
+    <button class="btn btn-primary" id="sendNotifBtn">Send</button>
+    <div id="notifMsgBox"></div>
+  </div>
 
-    // ===== Auth guard
-    onAuthStateChanged(auth,async(user)=>{
-      if(!user){location.href="index.html";return;}
-      currentUser=user;
-      const snap=await getDoc(doc(db,"users",user.uid));
-      if(!snap.exists()||snap.data().role!=="admin"){ alert("Not admin!"); location.href="index.html"; return; }
-      adminName.textContent="Hi, "+(snap.data().name||"Admin");
-      aName.value=snap.data().name||"";
-      aEmail.value=user.email;
-      subscribeUsers();
-      subscribeBills();
+  <!-- Admin Profile -->
+  <div class="section">
+    <h3>⚙️ Admin Profile</h3>
+    <label>Name</label><input id="adminName"/>
+    <label>Email (readonly)</label><input id="adminEmail" disabled/>
+    <label>Change Password</label><button class="btn btn-primary" id="changePwdBtn">Send Reset Email</button>
+    <button class="btn btn-green" id="saveAdminBtn">Save Profile</button>
+    <div id="adminMsg"></div>
+  </div>
+
+  <!-- Manage Admins -->
+  <div class="section">
+    <h3>👑 Manage Admins</h3>
+    <label>User Email</label>
+    <input id="adminEmailInput"/>
+    <button class="btn btn-primary" id="addAdminBtn">Add Admin</button>
+    <button class="btn btn-danger" id="removeAdminBtn">Remove Admin</button>
+    <div id="adminRoleMsg"></div>
+  </div>
+
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+  import { getFirestore, collection, getDocs, setDoc, doc, updateDoc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  const firebaseConfig = { /* 🔑 your config */ };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // Logout
+  logoutBtn.onclick = ()=> signOut(auth).then(()=>location.href="index.html");
+
+  // Load stats + users
+  async function loadUsers(){
+    const snap = await getDocs(collection(db,"users"));
+    let totalUsers=0,totalPoints=0;
+    usersTable.innerHTML="";
+    snap.forEach(d=>{
+      const u=d.data(); totalUsers++; totalPoints+=(u.points||0);
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${u.name||""}</td><td>${u.email}</td><td>${u.phone||""}</td><td>${u.points||0}</td><td>${u.role}</td>
+      <td>${u.role==="admin"?"":"<button class='btn btn-primary'>Promote</button>"}</td>`;
+      usersTable.appendChild(tr);
     });
+    statUsers.textContent=totalUsers;
+    statPoints.textContent=totalPoints;
+  }
+  loadUsers();
 
-    // ===== Logout
-    logoutBtn.onclick=()=>signOut(auth);
+  // Bills
+  addBillBtn.onclick=async()=>{
+    try{
+      await setDoc(doc(db,"bills",billNo.value),{amount:Number(billAmount.value),createdAt:Date.now()});
+      billMsg.textContent="Bill added!";billMsg.style.color="green";
+    }catch(e){billMsg.textContent=e.message;billMsg.style.color="red";}
+  }
 
-    // ===== Users live
-    function subscribeUsers(){
-      onSnapshot(collection(db,"users"),(snap)=>{
-        usersTable.innerHTML="";
-        snap.forEach(d=>{
-          const u=d.data();
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>${u.name||"-"}</td><td>${u.email}</td><td>${u.points||0}</td><td>${(u.claimsCount||0)}</td>`;
-          usersTable.appendChild(tr);
-        });
+  // Notifications
+  sendNotifBtn.onclick=async()=>{
+    try{
+      await addDoc(collection(db,"notifications"),{message:notifMsg.value,createdAt:new Date()});
+      notifMsgBox.textContent="Notification sent.";notifMsgBox.style.color="green";
+    }catch(e){notifMsgBox.textContent=e.message;notifMsgBox.style.color="red";}
+  }
+
+  // Admin profile
+  auth.onAuthStateChanged(async user=>{
+    if(!user){location.href="index.html";return;}
+    adminEmail.value=user.email;
+    const snap=await getDocs(query(collection(db,"users"),where("email","==",user.email)));
+    snap.forEach(d=>{adminName.value=d.data().name||"";});
+  });
+
+  saveAdminBtn.onclick=async()=>{
+    const user=auth.currentUser;
+    if(!user)return;
+    try{
+      await updateDoc(doc(db,"users",user.uid),{name:adminName.value});
+      adminMsg.textContent="Profile updated.";adminMsg.style.color="green";
+    }catch(e){adminMsg.textContent=e.message;adminMsg.style.color="red";}
+  }
+
+  changePwdBtn.onclick=()=> sendPasswordResetEmail(auth,auth.currentUser.email);
+
+  // Manage Admins
+  addAdminBtn.onclick=()=> updateRole("admin");
+  removeAdminBtn.onclick=()=> updateRole("user");
+
+  async function updateRole(role){
+    try{
+      const q=query(collection(db,"users"),where("email","==",adminEmailInput.value));
+      const snap=await getDocs(q);
+      if(snap.empty){adminRoleMsg.textContent="User not found.";return;}
+      snap.forEach(async d=>{
+        await updateDoc(doc(db,"users",d.id),{role});
+        adminRoleMsg.textContent=`Role updated to ${role}`;
+        adminRoleMsg.style.color="green"; loadUsers();
       });
-    }
+    }catch(e){adminRoleMsg.textContent=e.message;adminRoleMsg.style.color="red";}
+  }
 
-    // ===== Bills live
-    function subscribeBills(){
-      const q=query(collection(db,"bills"),orderBy("createdAt","desc"));
-      onSnapshot(q,(snap)=>{
-        billsTable.innerHTML="";
-        snap.forEach(d=>{
-          const b=d.data();
-          const tr=document.createElement("tr");
-          tr.innerHTML=`<td>${d.id}</td><td>₹${b.amount}</td><td>${b.claimedBy||"-"}</td>`;
-          billsTable.appendChild(tr);
-        });
-      });
-    }
-
-    // ===== Add Bill
-    addBillBtn.onclick=async()=>{
-      billMsg.textContent=""; addBillBtn.disabled=true;
-      try{
-        await setDoc(doc(db,"bills",billNo.value.trim()),{
-          amount:Number(billAmt.value),createdAt:new Date()
-        });
-        billMsg.style.color="green"; billMsg.textContent="Bill added.";
-        billNo.value=""; billAmt.value="";
-      }catch(e){ billMsg.style.color="red"; billMsg.textContent=e.message; }
-      addBillBtn.disabled=false;
-    };
-
-    // ===== Send Notification
-    sendNotifBtn.onclick=async()=>{
-      notifMsg.textContent=""; sendNotifBtn.disabled=true;
-      try{
-        await setDoc(doc(collection(db,"notifications")),{
-          message:notifText.value,createdAt:new Date()
-        });
-        notifMsg.style.color="green"; notifMsg.textContent="Sent!";
-        notifText.value="";
-      }catch(e){ notifMsg.style.color="red"; notifMsg.textContent=e.message; }
-      sendNotifBtn.disabled=false;
-    };
-
-    // ===== Save Admin Profile
-    saveAdminBtn.onclick=async()=>{
-      adminMsg.textContent=""; saveAdminBtn.disabled=true;
-      try{
-        await updateProfile(currentUser,{displayName:aName.value});
-        await updateDoc(doc(db,"users",currentUser.uid),{name:aName.value});
-        adminMsg.style.color="green"; adminMsg.textContent="Saved.";
-      }catch(e){ adminMsg.style.color="red"; adminMsg.textContent=e.message; }
-      saveAdminBtn.disabled=false;
-    };
-
-    // ===== Reset Pwd
-    resetPwdBtn.onclick=async()=>{
-      adminMsg.textContent=""; resetPwdBtn.disabled=true;
-      try{
-        await sendPasswordResetEmail(auth,currentUser.email);
-        adminMsg.style.color="green"; adminMsg.textContent="Reset email sent!";
-      }catch(e){ adminMsg.style.color="red"; adminMsg.textContent=e.message; }
-      resetPwdBtn.disabled=false;
-    };
-
-    // ===== Manage Admins
-    addAdminBtn.onclick=async()=>{
-      manageAdminMsg.textContent=""; addAdminBtn.disabled=true;
-      try{
-        await updateDoc(doc(db,"users",newAdminUid.value.trim()),{role:"admin"});
-        manageAdminMsg.style.color="green"; manageAdminMsg.textContent="Admin added.";
-        newAdminUid.value="";
-      }catch(e){ manageAdminMsg.style.color="red"; manageAdminMsg.textContent=e.message; }
-      addAdminBtn.disabled=false;
-    };
-
-    removeAdminBtn.onclick=async()=>{
-      manageAdminMsg.textContent=""; removeAdminBtn.disabled=true;
-      try{
-        await updateDoc(doc(db,"users",removeAdminUid.value.trim()),{role:"user"});
-        manageAdminMsg.style.color="green"; manageAdminMsg.textContent="Admin removed.";
-        removeAdminUid.value="";
-      }catch(e){ manageAdminMsg.style.color="red"; manageAdminMsg.textContent=e.message; }
-      removeAdminBtn.disabled=false;
-    };
-  </script>
+</script>
 </body>
 </html>
