@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard - Shakuntlam</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div><img src="logo.png" class="logo"/> <strong>Admin Dashboard</strong></div>
+    <div class="profile-info">
+      <span id="adminEmail"></span>
+      <button class="btn btn-logout" id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat-box">
+        <div>Total Users</div>
+        <div id="statUsers" class="stat-num">0</div>
+      </div>
+      <div class="stat-box">
+        <div>Total Bill Amount</div>
+        <div id="statAmount" class="stat-num">₹0</div>
+      </div>
+      <div class="stat-box">
+        <div>Total Points Awarded</div>
+        <div id="statPoints" class="stat-num">0</div>
+      </div>
+    </div>
+
+    <!-- Pending Inbox -->
+    <div class="card">
+      <h2>📩 Pending Requests (Bill Not Found)</h2>
+      <table>
+        <thead><tr><th>Bill #</th><th>Amount</th><th>User</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody id="inboxTable"></tbody>
+      </table>
+    </div>
+
+    <!-- All Bills -->
+    <div class="card">
+      <h2>🧾 Bills Database</h2>
+
+      <!-- Add new bill -->
+      <div>
+        <input type="text" id="newBillNo" placeholder="Bill No"/>
+        <input type="number" id="newBillAmt" placeholder="Amount"/>
+        <button class="btn btn-add" id="addBillBtn">Add Bill</button>
+        <div id="addBillMsg"></div>
+      </div>
+
+      <table>
+        <thead><tr><th>Bill #</th><th>Amount</th><th>Status</th><th>Claimed By</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody id="billsTable"></tbody>
+      </table>
+    </div>
+
+    <!-- Users -->
+    <div class="card">
+      <h2>👥 Users</h2>
+      <input type="text" id="userSearch" placeholder="Search by email..." style="width: 100%; box-sizing: border-box; margin-bottom: 12px; padding: 8px;">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Points</th></tr></thead>
+        <tbody id="usersTable"></tbody>
+      </table>
+
+      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+        <h3>Add New Admin</h3>
+        <input type="text" id="newAdminEmail" placeholder="User's Email"/>
+        <button class="btn btn-add" id="makeAdminBtn">Make Admin</button>
+        <div id="addAdminMsg" style="margin-top: 8px; font-weight: 600;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="script.js" defer></script>
+</body>
+</html>
