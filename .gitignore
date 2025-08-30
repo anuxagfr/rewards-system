@@ -3,3 +3,7 @@ node_modules/
 
 # Ignore environment files with secrets
 .env
+
+# Firebase Hosting cache and logs
+.firebase/
+firebase-debug.log
